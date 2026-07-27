@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "clip-note-helper"
-version = "0.1.0"
+version = "0.1.1"
 description = "Local audio transcription helper for Obsidian Web Clipper CN"
 requires-python = ">=3.11,<3.13"
 dependencies = [
@@ -20,4 +20,3 @@ clip-note-helper = "clip_note_helper.__main__:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
-

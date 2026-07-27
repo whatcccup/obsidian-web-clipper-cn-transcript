@@ -13,12 +13,15 @@ export function isCookieForPlatform(cookie: StoredCookie, platform: ClipNotePlat
 
 export function parseCookieHeader(input: string, platform: ClipNotePlatform): StoredCookie[] {
 	const domain = platform === 'bilibili' ? '.bilibili.com' : '.youtube.com';
-	return input.split(';').map(part => part.trim()).filter(Boolean).map(part => {
+	const header = input.trim().replace(/^cookie\s*:\s*/i, '');
+	return header.split(';').map(part => part.trim()).filter(Boolean).map(part => {
 		const separator = part.indexOf('=');
 		if (separator <= 0) throw new Error('Cookie Header 格式无效');
+		const name = part.slice(0, separator).trim();
+		if (!name || /[\s:]/.test(name)) throw new Error(`Cookie 名称无效：${name || '(空)'}`);
 		return {
 			domain,
-			name: part.slice(0, separator).trim(),
+			name,
 			value: part.slice(separator + 1).trim(),
 			path: '/',
 			secure: true,
@@ -27,22 +30,23 @@ export function parseCookieHeader(input: string, platform: ClipNotePlatform): St
 }
 
 export function parseNetscapeCookies(input: string, platform: ClipNotePlatform): StoredCookie[] {
-	const cookies = input.split(/\r?\n/).map(line => line.trim()).filter(line => line && !line.startsWith('#')).map(line => {
+	const cookies = input.split(/\r?\n/).map(line => line.trim()).filter(line => line && (!line.startsWith('#') || line.startsWith('#HttpOnly_'))).map(line => {
 		const parts = line.split('\t');
 		if (parts.length < 7) throw new Error('cookies.txt 格式无效');
+		const httpOnly = parts[0].startsWith('#HttpOnly_');
 		return {
-			domain: parts[0],
+			domain: parts[0].replace(/^#HttpOnly_/, ''),
 			path: parts[2] || '/',
 			secure: parts[3].toUpperCase() === 'TRUE',
 			expirationDate: Number(parts[4]) || undefined,
 			name: parts[5],
 			value: parts.slice(6).join('\t'),
+			httpOnly,
 		};
 	});
-	if (cookies.some(cookie => !isCookieForPlatform(cookie, platform))) {
-		throw new Error('Cookie 域名与所选平台不匹配');
-	}
-	return cookies;
+	const platformCookies = cookies.filter(cookie => isCookieForPlatform(cookie, platform));
+	if (!platformCookies.length) throw new Error('cookies.txt 中没有找到所选平台的 Cookie');
+	return platformCookies;
 }
 
 export function parseManualCookies(input: string, platform: ClipNotePlatform): StoredCookie[] {
@@ -54,6 +58,9 @@ export function parseManualCookies(input: string, platform: ClipNotePlatform): S
 }
 
 export async function readBrowserCookies(platform: ClipNotePlatform): Promise<StoredCookie[]> {
+	if (!browser.permissions?.request || !browser.cookies?.getAll) {
+		throw new Error('当前浏览器不支持 Cookies 自动读取');
+	}
 	const granted = await browser.permissions.request({ permissions: ['cookies'] });
 	if (!granted) throw new Error('未授予 Chrome Cookies 权限');
 	const urls = platform === 'bilibili'

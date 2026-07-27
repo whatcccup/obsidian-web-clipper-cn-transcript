@@ -6,7 +6,7 @@
 
 Clip Note 不建立另一套笔记生成或保存流程。它只在 Bilibili / YouTube 视频没有平台字幕时，按需下载音轨并生成带时间戳的 transcript，然后把结果写回 Obsidian Web Clipper 原有的 `{{transcript}}` 变量。模板、Interpreter、属性和保存到 Obsidian 的流程仍由 Web Clipper 负责。
 
-> 当前版本：`v0.1.0` 源码预览版。已完成 macOS + Chrome/Chromium 的一键安装、覆盖安装和真实视频流程验证；尚未提供签名的 `.dmg`、`.pkg` 或 Chrome Web Store 正式版本。
+> 当前版本：`v0.1.1` 源码版。已完成 macOS + Chrome/Chromium 的一键安装、覆盖安装和真实视频流程验证。本项目不计划提供预编译独立程序，安装与升级统一通过源码脚本完成。
 
 ## 为什么做 Clip Note
 
@@ -60,6 +60,7 @@ flowchart LR
 
 - BCut 在线 ASR
   - 无需下载本地模型
+  - 直接使用必剪的非官方公开接口，无需也没有用户 API Key 配置
   - 音频会上传至必剪接口
   - 接口失败时不会自动切换到本地模型
 - Faster Whisper 本地 ASR
@@ -77,6 +78,8 @@ Bilibili 和 YouTube 分别支持：
 - 不使用 Cookies
 
 公开可访问的视频通常不需要 Cookies。登录限制、年龄限制、会员内容或地区限制的视频可能需要 Cookies。
+
+在设置页选择“自动读取”后，点击“读取并验证”并批准 Chrome Cookies 权限；选择“手动导入”时，可粘贴请求头中的 Cookie 值或 Netscape `cookies.txt` 内容。页面会明确显示读取中、成功数量或失败原因。这里验证的是读取结果、格式和平台域名，账号权限是否仍有效由实际视频下载请求最终确认。
 
 ## 按需启动架构
 
@@ -112,7 +115,7 @@ Helper 每次启动会生成临时会话令牌。扩展访问本地 API 时必�
 - Node.js 18+
 - [`uv`](https://docs.astral.sh/uv/)
 
-当前通过源码安装。安装脚本会用 `uv` 在用户目录准备 Python 3.11 Helper 环境；未来 Release 版本计划改为预编译独立程序，届时普通用户不需要安装 Node.js、Python 或 `uv`。
+Clip Note 通过源码安装。安装脚本会用 `uv` 在用户目录准备 Python 3.11 Helper 环境，因此用户需要保留 Node.js、npm 和 `uv`。
 
 ### 1. 一键安装或覆盖安装
 
@@ -169,6 +172,33 @@ Helper 会安装到：
 2. 启用“开发者模式”。
 3. 首次安装：点击“加载未打包的扩展程序”，选择 `extension/dist/`。
 4. 覆盖安装：在原 Clip Note 扩展卡片上点击“重新加载”。固定扩展 ID 会保留已有本地配置。
+
+### 后续更新 Clip Note
+
+如果最初通过 Git clone 安装，在仓库目录运行：
+
+```bash
+bash update.sh
+```
+
+脚本只接受 Git 的 fast-forward 更新，然后自动执行覆盖安装。完成后打开 `chrome://extensions`，在原扩展卡片上点击“重新加载”。浏览器中的 Clip Note 设置、Cookies、模板、本地 Whisper 模型和 transcript 缓存会保留。
+
+如果最初下载的是 GitHub 源码压缩包，请重新下载最新版源码并运行：
+
+```bash
+bash install.sh --yes
+```
+
+不要直接用 Obsidian Web Clipper CN 的 Release 文件覆盖 `extension/`，否则 Clip Note 的设置、按钮和 Helper 联动代码会被移除。
+
+### Obsidian Web Clipper CN 上游更新
+
+Clip Note 对 Web Clipper CN 源码做了集成修改，上游新 Release 不能由普通用户直接叠加安装。更新分为两层：
+
+1. Clip Note 维护者跟踪 [Obsidian Web Clipper CN](https://github.com/nextcaicai/obsidian-clipper-cn) 的新版本，把上游改动合并到 `extension/`，解决冲突并完成普通剪藏、模板、Interpreter、原生字幕和 Clip Note 回归验证。
+2. 验证完成后发布新的 Clip Note 版本；普通用户再运行 `bash update.sh` 更新。
+
+这种方式不会让未经验证的上游改动直接覆盖 Clip Note。当前仓库是源码快照起步，与上游仓库没有可直接无冲突合并的共同 Git 历史，因此维护者需要按版本比较并移植上游变更，而不是让用户自行 `git merge`。
 
 ### 3. 启用 Clip Note
 

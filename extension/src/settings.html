@@ -274,7 +274,10 @@
 									<div class="setting-item-info"><label for="clip-note-provider">转写器</label><div class="setting-item-description">失败时不会自动切换另一种转写器。</div></div>
 									<div class="setting-item-control"><select id="clip-note-provider"><option value="bcut">BCut 在线 ASR</option><option value="faster-whisper">Faster Whisper 本地 ASR</option></select></div>
 								</div>
-								<div id="clip-note-bcut-notice" class="warning-container" hidden><span>BCut 会把下载的音频上传至必剪接口。失败后只会提示重试或由你手动切换转写器。</span><span id="clip-note-bcut-status">BCut API：测试连接后检查</span></div>
+								<div id="clip-note-bcut-notice" class="warning-container" hidden>
+									<span>BCut 使用必剪的非官方公开接口，无需填写 API Key。音频会上传至必剪；接口可能随平台调整而失效，也不会自动回退到本地模型。</span>
+									<div class="clip-note-inline"><button type="button" id="clip-note-bcut-test">测试 BCut 接口</button><span id="clip-note-bcut-status">尚未测试</span></div>
+								</div>
 								<div id="clip-note-model-controls">
 									<div class="setting-item mod-horizontal">
 										<div class="setting-item-info"><label for="clip-note-whisper-model">本地模型</label><div class="setting-item-description" id="clip-note-model-status">点击刷新读取状态</div></div>
@@ -288,18 +291,31 @@
 
 						<div class="setting-group">
 							<div class="setting-item setting-item-heading"><h3>Cookies 设置</h3></div>
-							<div class="setting-item-description">Cookies 只保存在 chrome.storage.local，不进入同步、设置导出、模板、日志或 transcript 缓存。</div>
+							<div class="setting-item-description">
+								先在当前 Chrome 用户中登录对应网站。选择“自动读取”后允许 Cookies 权限，再点击“读取并验证”；或选择“手动导入”，粘贴 Cookie Header / Netscape cookies.txt 后点击“导入并验证”。<br>
+								这里的“验证”表示扩展成功读取并通过格式、域名检查；Cookie 是否仍具备账号权限会在实际下载视频时由平台最终确认。Cookies 只保存在 <code>chrome.storage.local</code>，不会进入同步、设置导出、模板、日志或 transcript 缓存。
+							</div>
 							<div class="clip-note-cookie-grid">
 								<div class="clip-note-cookie-card">
 									<h4>B 站</h4><select id="clip-note-bilibili-mode"><option value="off">不使用</option><option value="browser">自动读取</option><option value="manual">手动导入</option></select>
-									<textarea id="clip-note-bilibili-manual" placeholder="Cookie Header 或 Netscape cookies.txt"></textarea>
-									<div class="clip-note-actions"><button type="button" id="clip-note-bilibili-import">导入并覆盖</button><button type="button" id="clip-note-bilibili-clear">清除</button></div>
+									<div id="clip-note-bilibili-browser-controls" class="clip-note-cookie-mode-controls" hidden><p>确保已在当前浏览器登录 bilibili.com，然后点击下方按钮并允许权限。</p><button type="button" id="clip-note-bilibili-browser-read">读取并验证</button></div>
+									<div id="clip-note-bilibili-manual-controls" class="clip-note-cookie-mode-controls" hidden>
+										<textarea id="clip-note-bilibili-manual" placeholder="SESSDATA=...; bili_jct=...&#10;或粘贴 Netscape cookies.txt 内容"></textarea>
+										<details><summary>如何取得 Cookie Header？</summary><ol><li>打开并登录 B 站。</li><li>按 F12，进入 Network，刷新页面并选择一个 bilibili.com 请求。</li><li>在 Request Headers 中复制 <code>cookie:</code> 后面的完整内容。请勿把 Cookie 发给他人。</li></ol></details>
+										<button type="button" id="clip-note-bilibili-import">导入并验证</button>
+									</div>
+									<div class="clip-note-actions"><button type="button" id="clip-note-bilibili-clear">清除本地 Cookie</button></div>
 									<div id="clip-note-bilibili-summary" class="setting-item-description"></div>
 								</div>
 								<div class="clip-note-cookie-card">
 									<h4>YouTube</h4><select id="clip-note-youtube-mode"><option value="off">不使用</option><option value="browser">自动读取</option><option value="manual">手动导入</option></select>
-									<textarea id="clip-note-youtube-manual" placeholder="Cookie Header 或 Netscape cookies.txt"></textarea>
-									<div class="clip-note-actions"><button type="button" id="clip-note-youtube-import">导入并覆盖</button><button type="button" id="clip-note-youtube-clear">清除</button></div>
+									<div id="clip-note-youtube-browser-controls" class="clip-note-cookie-mode-controls" hidden><p>确保已在当前浏览器登录 youtube.com，然后点击下方按钮并允许权限。</p><button type="button" id="clip-note-youtube-browser-read">读取并验证</button></div>
+									<div id="clip-note-youtube-manual-controls" class="clip-note-cookie-mode-controls" hidden>
+										<textarea id="clip-note-youtube-manual" placeholder="LOGIN_INFO=...; SID=...&#10;或粘贴 Netscape cookies.txt 内容"></textarea>
+										<details><summary>如何取得 Cookie Header？</summary><ol><li>打开并登录 YouTube。</li><li>按 F12，进入 Network，刷新页面并选择一个 youtube.com 请求。</li><li>在 Request Headers 中复制 <code>cookie:</code> 后面的完整内容。请勿把 Cookie 发给他人。</li></ol></details>
+										<button type="button" id="clip-note-youtube-import">导入并验证</button>
+									</div>
+									<div class="clip-note-actions"><button type="button" id="clip-note-youtube-clear">清除本地 Cookie</button></div>
 									<div id="clip-note-youtube-summary" class="setting-item-description"></div>
 								</div>
 							</div>
