@@ -11,6 +11,7 @@ export const GENERAL_KEY = 'clip_note_general_settings';
 export const ASR_KEY = 'clip_note_asr_settings';
 export const COOKIE_KEY = 'clip_note_cookie_settings';
 export const ACTIVE_JOB_KEY = 'clip_note_active_job';
+export const PANEL_COLLAPSED_KEY = 'clip_note_panel_collapsed';
 
 export const DEFAULT_GENERAL_SETTINGS: ClipNoteGeneralSettings = {
 	enabled: false,
@@ -70,4 +71,13 @@ export async function loadActiveJob(): Promise<ClipNoteJobState | null> {
 
 export async function saveActiveJob(job: ClipNoteJobState): Promise<void> {
 	await browser.storage.local.set({ [ACTIVE_JOB_KEY]: job });
+}
+
+export async function loadPanelCollapsed(): Promise<boolean> {
+	const stored = await browser.storage.local.get(PANEL_COLLAPSED_KEY);
+	return stored[PANEL_COLLAPSED_KEY] === true;
+}
+
+export async function savePanelCollapsed(collapsed: boolean): Promise<void> {
+	await browser.storage.local.set({ [PANEL_COLLAPSED_KEY]: collapsed });
 }

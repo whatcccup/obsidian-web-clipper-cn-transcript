@@ -1,7 +1,7 @@
 import browser from '../utils/browser-polyfill';
 import { createTranscription, getHealth, getModelStatus, waitForTranscription } from './api';
 import { readBrowserCookies } from './cookies';
-import { loadActiveJob, loadClipNoteSettings, saveActiveJob, saveCookieSettings } from './storage';
+import { loadActiveJob, loadClipNoteSettings, loadPanelCollapsed, saveActiveJob, saveCookieSettings, savePanelCollapsed } from './storage';
 import { ClipNoteJobState, ClipNotePlatform, StoredCookie, TranscriptResult } from './types';
 
 function platformForUrl(url: string): ClipNotePlatform | null {
@@ -126,9 +126,27 @@ export async function updateClipNotePanel(
 	onTranscript: (transcript: string) => Promise<void>,
 ): Promise<void> {
 	const panel = document.getElementById('clip-note-panel') as HTMLElement | null;
+	const title = document.getElementById('clip-note-title') as HTMLElement | null;
+	const toggle = document.getElementById('clip-note-toggle') as HTMLButtonElement | null;
+	const content = document.getElementById('clip-note-panel-content') as HTMLElement | null;
 	const button = document.getElementById('clip-note-generate') as HTMLButtonElement | null;
 	const status = document.getElementById('clip-note-status') as HTMLElement | null;
-	if (!panel || !button || !status) return;
+	if (!panel || !title || !toggle || !content || !button || !status) return;
+	title.textContent = '当前视频没有可用字幕';
+	let collapsed = await loadPanelCollapsed();
+	const renderCollapsed = () => {
+		content.hidden = collapsed;
+		panel.classList.toggle('is-collapsed', collapsed);
+		toggle.textContent = collapsed ? '展开' : '收起';
+		toggle.setAttribute('aria-expanded', String(!collapsed));
+		toggle.setAttribute('aria-label', collapsed ? '展开 Clip Note' : '收起 Clip Note');
+	};
+	renderCollapsed();
+	toggle.onclick = async () => {
+		collapsed = !collapsed;
+		renderCollapsed();
+		await savePanelCollapsed(collapsed);
+	};
 	const platform = platformForUrl(url);
 	const settings = await loadClipNoteSettings();
 	if (!settings.general.enabled || !platform || hasTranscript) {

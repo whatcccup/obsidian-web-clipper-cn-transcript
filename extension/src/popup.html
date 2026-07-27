@@ -49,11 +49,14 @@
 				<textarea id="note-content-field" rows="4" data-i18n="notesAboutPage"></textarea>
 			</div>
 			<div id="clip-note-panel" hidden>
-				<div class="clip-note-panel-copy">
-					<strong>当前视频没有可用字幕</strong>
-					<span id="clip-note-status"></span>
+				<div class="clip-note-panel-header">
+					<strong id="clip-note-title"></strong>
+					<button type="button" id="clip-note-toggle" aria-expanded="true"></button>
 				</div>
-				<button type="button" id="clip-note-generate">使用 Clip Note 生成字幕</button>
+				<div id="clip-note-panel-content">
+					<span id="clip-note-status"></span>
+					<button type="button" id="clip-note-generate"></button>
+				</div>
 			</div>
 			<div class="clipper-footer">
 				<div class="vault-path-container">
