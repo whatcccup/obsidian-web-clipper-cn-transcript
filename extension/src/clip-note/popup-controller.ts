@@ -132,7 +132,7 @@ export async function updateClipNotePanel(
 	const button = document.getElementById('clip-note-generate') as HTMLButtonElement | null;
 	const status = document.getElementById('clip-note-status') as HTMLElement | null;
 	if (!panel || !title || !toggle || !content || !button || !status) return;
-	title.textContent = '当前视频没有可用字幕';
+	title.textContent = 'Clip Note';
 	let collapsed = await loadPanelCollapsed();
 	const renderCollapsed = () => {
 		content.hidden = collapsed;
