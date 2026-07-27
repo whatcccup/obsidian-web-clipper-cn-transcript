@@ -80,7 +80,7 @@ def start() -> dict:
     python = config.get("python")
     helper_dir = config.get("helperDir")
     if not python or not helper_dir or not Path(python).exists():
-        return {"ok": False, "status": "not-installed", "error": "Clip Note Helper 未正确安装"}
+        return {"ok": False, "status": "not-installed", "error": "Transcript Helper 未正确安装"}
 
     port = int(config.get("port", 8484))
     token = secrets.token_urlsafe(32)

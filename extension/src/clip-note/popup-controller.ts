@@ -110,7 +110,7 @@ async function monitorJob(
 		button.textContent = '字幕已生成';
 		await setJobBadge('clear');
 	} catch (error) {
-		const message = error instanceof TypeError ? 'Clip Note Helper 未连接' : (error as Error).message;
+		const message = error instanceof TypeError ? 'Transcript Helper 未连接' : (error as Error).message;
 		job = { ...job, status: 'failed', stage: '生成失败', error: message, updatedAt: Date.now() };
 		await saveActiveJob(job);
 		status.textContent = `生成失败：${message}`;
@@ -132,14 +132,14 @@ export async function updateClipNotePanel(
 	const button = document.getElementById('clip-note-generate') as HTMLButtonElement | null;
 	const status = document.getElementById('clip-note-status') as HTMLElement | null;
 	if (!panel || !title || !toggle || !content || !button || !status) return;
-	title.textContent = 'Clip Note';
+	title.textContent = 'Transcript Generator';
 	let collapsed = await loadPanelCollapsed();
 	const renderCollapsed = () => {
 		content.hidden = collapsed;
 		panel.classList.toggle('is-collapsed', collapsed);
 		toggle.textContent = collapsed ? '展开' : '收起';
 		toggle.setAttribute('aria-expanded', String(!collapsed));
-		toggle.setAttribute('aria-label', collapsed ? '展开 Clip Note' : '收起 Clip Note');
+		toggle.setAttribute('aria-label', collapsed ? '展开字幕生成' : '收起字幕生成');
 	};
 	renderCollapsed();
 	toggle.onclick = async () => {
@@ -178,14 +178,14 @@ export async function updateClipNotePanel(
 	button.disabled = false;
 	button.textContent = existingJob?.videoKey === videoKey && existingJob.status === 'failed'
 		? '重试生成字幕'
-		: '使用 Clip Note 生成字幕';
+		: '生成 transcript 字幕';
 	status.textContent = existingJob?.videoKey === videoKey && existingJob.status === 'failed'
 		? `上次生成失败：${existingJob.error || '未知错误'}`
 		: '点击后将启动本地 Helper。任务提交后可以关闭剪藏界面。';
 	button.onclick = async () => {
 		button.disabled = true;
 		button.textContent = '正在启动';
-		status.textContent = '正在连接 Clip Note Helper…';
+		status.textContent = '正在连接 Transcript Helper…';
 		try {
 			await getHealth();
 			if (settings.asr.provider === 'faster-whisper') {
@@ -211,7 +211,7 @@ export async function updateClipNotePanel(
 			await saveActiveJob(job);
 			await monitorJob(job, button, status, onTranscript);
 		} catch (error) {
-			const message = error instanceof TypeError ? 'Clip Note Helper 未连接' : (error as Error).message;
+			const message = error instanceof TypeError ? 'Transcript Helper 未连接' : (error as Error).message;
 			status.textContent = `生成失败：${message}`;
 			button.textContent = '重试生成字幕';
 			button.disabled = false;

@@ -56,7 +56,7 @@ export async function initializeClipNoteSettings(): Promise<void> {
 		const runtime = await getHelperStatus();
 		connection.textContent = runtime.status === 'ready'
 			? `已就绪 · v${runtime.health?.version || 'unknown'} · 空闲 ${runtime.health?.idleTimeoutSeconds || 900} 秒后退出`
-			: runtime.status === 'not-installed' ? '尚未安装 Clip Note Helper' : 'Helper 未运行';
+			: runtime.status === 'not-installed' ? '尚未安装 Transcript Helper' : 'Helper 未运行';
 	};
 	document.getElementById('clip-note-start')!.addEventListener('click', async () => {
 		connection.textContent = '正在连接…';

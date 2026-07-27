@@ -1,18 +1,27 @@
-# Clip Note
+# Obsidian Web Clipper CN · Transcript
 
-![Clip Note 图标](extension/src/icons/clip-note.svg)
+![Transcript Generator 图标](extension/src/icons/clip-note.svg)
 
-为 Obsidian Web Clipper CN 增加“无字幕视频转写”能力。
+在 Obsidian Web Clipper CN 中补充无字幕视频的 transcript 生成能力。
 
-Clip Note 不建立另一套笔记生成或保存流程。它只在 Bilibili / YouTube 视频没有平台字幕时，按需下载音轨并生成带时间戳的 transcript，然后把结果写回 Obsidian Web Clipper 原有的 `{{transcript}}` 变量。模板、Interpreter、属性和保存到 Obsidian 的流程仍由 Web Clipper 负责。
+Transcript Generator 不建立另一套笔记生成或保存流程。它只在 Bilibili / YouTube 视频没有平台字幕时，按需下载音轨并生成带时间戳的 transcript，然后把结果写回 Obsidian Web Clipper 原有的 `{{transcript}}` 变量。模板、Interpreter、属性和保存到 Obsidian 的流程仍由 Web Clipper 负责。
 
-> 当前版本：`v0.1.1` 源码版。已完成 macOS + Chrome/Chromium 的一键安装、覆盖安装和真实视频流程验证。本项目不计划提供预编译独立程序，安装与升级统一通过源码脚本完成。
+> 当前产品版本：`v0.2.0` 源码版。代码基线为 [Obsidian Web Clipper CN 1.4.6](https://github.com/nextcaicai/obsidian-clipper-cn/releases/tag/1.4.6)。已完成 macOS + Chrome/Chromium 的一键安装、覆盖安装和真实视频流程验证。本项目不计划提供预编译独立程序，安装与升级统一通过源码脚本完成。
 
-## 为什么做 Clip Note
+## 版本号如何定义
+
+- `v0.2.0` 是本项目自身的产品版本，同时写入浏览器扩展和 Transcript Helper。
+- `1.4.6` 是 Obsidian Web Clipper CN 上游版本，只作为代码基线记录，不再混用为本项目版本。
+- Obsidian 官方 Web Clipper、Web Clipper CN 和本项目各自独立发布，因此版本号本来就不会自动保持一致。
+- 后续合并新的 CN 上游版本时，会更新“代码基线”；只有本项目发布功能或修复时，才更新产品版本。
+
+旧构建曾把扩展版本写成 `1.7.1`，实际混用了 Obsidian 官方 Web Clipper 的版本号，并不代表本项目已经基于 Web Clipper CN 1.7.1。自 `v0.2.0` 起已改为独立版本规则。
+
+## 为什么做 Transcript Generator
 
 Obsidian Web Clipper 已经能够提取视频页面自带的字幕，并把字幕用于模板和 Interpreter。真正缺少的是：当视频没有平台字幕时，如何补齐 transcript。
 
-BiliNote 提供了完整的视频笔记系统，但其数据库、GPT 总结、RAG、截图和前后端部署对于这个目标过重。Clip Note 只保留必要能力：
+BiliNote 提供了完整的视频笔记系统，但其数据库、GPT 总结、RAG、截图和前后端部署对于这个目标过重。Transcript Generator 只保留必要能力：
 
 - Bilibili / YouTube 音轨下载
 - BCut 在线 ASR
@@ -27,7 +36,7 @@ BiliNote 提供了完整的视频笔记系统，但其数据库、GPT 总结、R
 flowchart LR
     A[打开 Bilibili / YouTube 视频] --> B{Web Clipper 找到平台字幕?}
     B -->|是| C[继续使用原生 transcript]
-    B -->|否| D[显示使用 Clip Note 生成字幕]
+    B -->|否| D[显示 Transcript Generator]
     D --> E[按需启动本地 Helper]
     E --> F[下载视频音轨]
     F --> G{用户选择的 ASR}
@@ -83,7 +92,7 @@ Bilibili 和 YouTube 分别支持：
 
 ## 按需启动架构
 
-Clip Note 由三个组件组成：
+本项目由三个组件组成：
 
 ```text
 ClipNote/
@@ -99,7 +108,7 @@ ClipNote/
     ↓ Native Messaging
 clip-note-launcher
     ↓ 按需启动
-Clip Note Helper (127.0.0.1:8484)
+Transcript Helper (127.0.0.1:8484)
 ```
 
 Launcher 只处理 `start`、`status`、`stop` 和 `restart`，执行完命令后立即退出。Helper 才负责视频任务，并在空闲后自动退出。
@@ -115,11 +124,22 @@ Helper 每次启动会生成临时会话令牌。扩展访问本地 API 时必�
 - Node.js 18+
 - [`uv`](https://docs.astral.sh/uv/)
 
-Clip Note 通过源码安装。安装脚本会用 `uv` 在用户目录准备 Python 3.11 Helper 环境，因此用户需要保留 Node.js、npm 和 `uv`。
+本项目通过源码安装。用户不需要预先安装指定版本的 Python：安装脚本会让 `uv` 在项目专用目录中准备隔离的 Python 3.11 运行时。电脑上已有 Python 3.12、3.13 或更高版本不会冲突，也不会被替换。这里固定 Helper 运行时，是为了让 Faster Whisper、CTranslate2 和下载依赖使用经过验证的一致环境。
 
 ### 1. 一键安装或覆盖安装
 
+首次安装时，先克隆仓库并进入仓库文件夹，再运行安装脚本：
+
 ```bash
+git clone https://github.com/whatcccup/ClipNote.git
+cd ClipNote
+bash install.sh
+```
+
+如果源码已经下载到电脑，请先进入实际文件夹。例如 GitHub 压缩包通常解压为 `ClipNote-main`：
+
+```bash
+cd ~/Downloads/ClipNote-main
 bash install.sh
 ```
 
@@ -130,15 +150,16 @@ bash install.sh
 - 安装按需 Helper 与 Native Messaging Host
 - 明确保证不创建 LaunchAgent
 
-如果检测到已经安装的 Clip Note，脚本会先询问是否覆盖。覆盖安装会更新 Helper、Launcher 和扩展构建产物，但不会删除：
+如果检测到已经安装的 Transcript Helper，脚本会先询问是否覆盖。覆盖安装会更新 Helper、Launcher 和扩展构建产物，但不会删除：
 
-- 浏览器中的 Clip Note 设置、Cookies 和模板
+- 浏览器中的 Transcript Generator 设置、Cookies 和模板
 - `~/.cache/clip-note/` 中的 Whisper 模型
 - transcript 缓存
 
-自动化环境可以显式确认覆盖：
+覆盖安装也需要先进入新版源码文件夹：
 
 ```bash
+cd /你的实际路径/ClipNote
 bash install.sh --yes
 ```
 
@@ -171,46 +192,48 @@ Helper 会安装到：
 1. 打开 `chrome://extensions`。
 2. 启用“开发者模式”。
 3. 首次安装：点击“加载未打包的扩展程序”，选择 `extension/dist/`。
-4. 覆盖安装：在原 Clip Note 扩展卡片上点击“重新加载”。固定扩展 ID 会保留已有本地配置。
+4. 覆盖安装：在原扩展卡片上点击“重新加载”。固定扩展 ID 会保留已有本地配置；扩展会显示新名称“Obsidian Web Clipper CN · Transcript”。
 
-### 后续更新 Clip Note
+### 后续更新
 
-如果最初通过 Git clone 安装，在仓库目录运行：
+如果最初通过 Git clone 安装，先进入仓库目录，再运行：
 
 ```bash
+cd /你的实际路径/ClipNote
 bash update.sh
 ```
 
-脚本只接受 Git 的 fast-forward 更新，然后自动执行覆盖安装。完成后打开 `chrome://extensions`，在原扩展卡片上点击“重新加载”。浏览器中的 Clip Note 设置、Cookies、模板、本地 Whisper 模型和 transcript 缓存会保留。
+脚本只接受 Git 的 fast-forward 更新，然后自动执行覆盖安装。完成后打开 `chrome://extensions`，在原扩展卡片上点击“重新加载”。浏览器中的 Transcript Generator 设置、Cookies、模板、本地 Whisper 模型和 transcript 缓存会保留。
 
 如果最初下载的是 GitHub 源码压缩包，请重新下载最新版源码并运行：
 
 ```bash
+cd ~/Downloads/ClipNote-main
 bash install.sh --yes
 ```
 
-不要直接用 Obsidian Web Clipper CN 的 Release 文件覆盖 `extension/`，否则 Clip Note 的设置、按钮和 Helper 联动代码会被移除。
+不要直接用 Obsidian Web Clipper CN 的 Release 文件覆盖 `extension/`，否则 Transcript Generator 的设置、按钮和 Helper 联动代码会被移除。
 
 ### Obsidian Web Clipper CN 上游更新
 
-Clip Note 对 Web Clipper CN 源码做了集成修改，上游新 Release 不能由普通用户直接叠加安装。更新分为两层：
+本项目对 Web Clipper CN 源码做了集成修改，上游新 Release 不能由普通用户直接叠加安装。更新分为两层：
 
-1. Clip Note 维护者跟踪 [Obsidian Web Clipper CN](https://github.com/nextcaicai/obsidian-clipper-cn) 的新版本，把上游改动合并到 `extension/`，解决冲突并完成普通剪藏、模板、Interpreter、原生字幕和 Clip Note 回归验证。
-2. 验证完成后发布新的 Clip Note 版本；普通用户再运行 `bash update.sh` 更新。
+1. 项目维护者跟踪 [Obsidian Web Clipper CN](https://github.com/nextcaicai/obsidian-clipper-cn) 的新版本，把上游改动合并到 `extension/`，解决冲突并完成普通剪藏、模板、Interpreter、原生字幕和 Transcript Generator 回归验证。
+2. 验证完成后发布新的本项目版本；普通用户再运行 `bash update.sh` 更新。
 
-这种方式不会让未经验证的上游改动直接覆盖 Clip Note。当前仓库是源码快照起步，与上游仓库没有可直接无冲突合并的共同 Git 历史，因此维护者需要按版本比较并移植上游变更，而不是让用户自行 `git merge`。
+这种方式不会让未经验证的上游改动直接覆盖 Transcript Generator。当前仓库是源码快照起步，与上游仓库没有可直接无冲突合并的共同 Git 历史，因此维护者需要按版本比较并移植上游变更，而不是让用户自行 `git merge`。
 
-### 3. 启用 Clip Note
+### 3. 启用 Transcript Generator
 
 进入 Obsidian Web Clipper CN 设置页：
 
 ```text
-Settings → Clip Note
+Settings → Transcript Generator
 ```
 
 然后：
 
-1. 启用 Clip Note。
+1. 启用字幕生成。
 2. 选择 BCut 或 Faster Whisper。
 3. 如果选择 Faster Whisper，先下载模型。
 4. 按需要配置 Bilibili / YouTube Cookies。
@@ -219,7 +242,7 @@ Settings → Clip Note
 
 | 数据 | 保存位置 | 是否同步 |
 |---|---|---:|
-| Clip Note 开关与 ASR 选择 | `chrome.storage.local` | 否 |
+| Transcript Generator 开关与 ASR 选择 | `chrome.storage.local` | 否 |
 | Bilibili / YouTube Cookies | `chrome.storage.local` | 否 |
 | Whisper 模型 | `~/.cache/clip-note/models/` | 否 |
 | transcript 缓存 | `~/.cache/clip-note/transcripts/` | 否 |
@@ -274,11 +297,11 @@ uv run python -c "import clip_note_helper.api"
 - BCut 使用非官方公开接口，接口可能随必剪服务变化。
 - YouTube 下载能力依赖 `yt-dlp`，平台策略变化可能需要及时升级。
 - Faster Whisper 大模型会占用较多磁盘、内存和处理时间。
-- 当前只发布 Chrome/Chromium 安装流程；Firefox 和 Safari 尚未完成 Clip Note 联调与发行验证。
+- 当前只发布 Chrome/Chromium 安装流程；Firefox 和 Safari 尚未完成 Transcript Generator 联调与发行验证。
 
 ## 项目来源与致谢
 
-Clip Note 是独立的社区衍生项目，核心思路和部分实现参考以下开源项目：
+Obsidian Web Clipper CN · Transcript 是独立的社区衍生项目，核心思路和部分实现参考以下开源项目：
 
 - [BiliNote](https://github.com/JefferyHcool/BiliNote) — 视频下载、BCut / Whisper 转写思路，MIT License
 - [Obsidian Web Clipper CN](https://github.com/nextcaicai/obsidian-clipper-cn) — 中文内容增强版 Web Clipper，MIT License
@@ -289,14 +312,14 @@ Clip Note 是独立的社区衍生项目，核心思路和部分实现参考以�
 
 ## 非官方声明
 
-Clip Note 不是 Obsidian、Bilibili、YouTube 或必剪的官方产品，也未获得这些平台的赞助或背书。
+Obsidian Web Clipper CN · Transcript 不是 Obsidian、Bilibili、YouTube 或必剪的官方产品，也未获得这些平台的赞助或背书。
 
 “Obsidian”、Bilibili、YouTube、必剪及相关名称、商标和图标属于各自权利人。用户应自行遵守平台服务条款、版权规则和所在地法律，仅处理自己有权访问和使用的内容。
 
 ## License
 
-Clip Note 项目自身代码采用 [MIT License](LICENSE)。
+本项目自身代码采用 [MIT License](LICENSE)。
 
 上游项目代码和第三方依赖仍分别受其原始许可证约束。Obsidian 的商标、图标、营销文案和其他品牌资产不包含在其源码 MIT License 中。
 
-本仓库使用自有 Clip Note 图标；未分发上游项目的商店截图、营销图片或 Obsidian 品牌图标。
+本仓库使用自有 Transcript Generator 图标；未分发上游项目的商店截图、营销图片或 Obsidian 品牌图标。

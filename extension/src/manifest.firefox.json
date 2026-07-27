@@ -1,9 +1,9 @@
 {
 	"manifest_version": 3,
 	"default_locale": "en",
-	"name": "Obsidian Web Clipper",
+	"name": "Obsidian Web Clipper CN · Transcript",
 	"homepage_url": "https://github.com/whatcccup/ClipNote",
-	"version": "1.7.1",
+	"version": "0.2.0",
 	"description": "Save and highlight web pages in a private and durable format that you can access offline. The official extension for Obsidian.",
 	"permissions": [
 		"activeTab",

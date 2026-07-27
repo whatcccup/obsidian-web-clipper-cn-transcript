@@ -23,7 +23,7 @@ auth_token = os.environ.get("CLIP_NOTE_TOKEN", "")
 idle_timeout_seconds = int(os.environ.get("CLIP_NOTE_IDLE_TIMEOUT", "900"))
 last_activity = time.monotonic()
 activity_lock = threading.Lock()
-app = FastAPI(title="Clip Note Helper", version=__version__)
+app = FastAPI(title="Transcript Helper", version=__version__)
 app.add_middleware(
     CORSMiddleware,
     allow_origin_regex=r"^(chrome-extension://[a-p]{32}|moz-extension://[0-9a-f-]+|http://(localhost|127\.0\.0\.1)(:\d+)?)$",
@@ -40,7 +40,7 @@ async def authorize_and_track(request: Request, call_next):
         if request.headers.get("Authorization") != f"Bearer {auth_token}":
             from fastapi.responses import JSONResponse
 
-            return JSONResponse(status_code=401, content={"detail": "Clip Note 会话无效"})
+            return JSONResponse(status_code=401, content={"detail": "Transcript Helper 会话无效"})
     with activity_lock:
         last_activity = time.monotonic()
     return await call_next(request)

@@ -23,7 +23,7 @@ async function send(action: 'start' | 'status' | 'stop' | 'restart'): Promise<He
 		return {
 			ok: false,
 			status: 'not-installed',
-			error: error instanceof Error ? error.message : 'Clip Note Helper 尚未安装',
+			error: error instanceof Error ? error.message : 'Transcript Helper 尚未安装',
 		};
 	}
 }
@@ -32,7 +32,7 @@ export async function startHelper(): Promise<HelperRuntimeSession> {
 	if (activeSession?.status === 'ready' && activeSession.url && activeSession.token) return activeSession;
 	const session = await send('start');
 	if (!session.ok || session.status !== 'ready' || !session.url || !session.token) {
-		throw new Error(session.error || 'Clip Note Helper 启动失败');
+		throw new Error(session.error || 'Transcript Helper 启动失败');
 	}
 	activeSession = session;
 	return session;
@@ -53,7 +53,7 @@ export async function stopHelper(): Promise<HelperRuntimeSession> {
 export async function restartHelper(): Promise<HelperRuntimeSession> {
 	activeSession = null;
 	const session = await send('restart');
-	if (!session.ok || session.status !== 'ready') throw new Error(session.error || 'Clip Note Helper 重启失败');
+	if (!session.ok || session.status !== 'ready') throw new Error(session.error || 'Transcript Helper 重启失败');
 	activeSession = session;
 	return session;
 }
@@ -61,4 +61,3 @@ export async function restartHelper(): Promise<HelperRuntimeSession> {
 export function clearHelperSession(): void {
 	activeSession = null;
 }
-

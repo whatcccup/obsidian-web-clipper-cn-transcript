@@ -40,7 +40,7 @@ for command_name in node npm uv; do
 done
 
 if [ -d "$INSTALL_DIR" ]; then
-  echo "Existing Clip Note installation detected: $INSTALL_DIR"
+  echo "Existing Transcript Helper installation detected: $INSTALL_DIR"
   echo "The Helper and Launcher program files will be overwritten."
   echo "Browser settings, Cookies, templates, local models, and transcript cache will be preserved."
   if [ "$ASSUME_YES" != true ]; then
@@ -64,11 +64,11 @@ fi
 echo "Building the Chrome extension..."
 (cd "$SCRIPT_DIR/extension" && npm install && npm run build:chrome)
 
-echo "Installing the on-demand Clip Note Helper..."
+echo "Installing the on-demand Transcript Helper..."
 bash "$SCRIPT_DIR/launcher/install-clip-note.sh" --force
 
 echo
-echo "Clip Note installation completed."
+echo "Obsidian Web Clipper CN · Transcript installation completed."
 echo "Chrome extension directory: $SCRIPT_DIR/extension/dist"
 echo "Open chrome://extensions and load or reload that directory."
 echo "No LaunchAgent was created. The Helper starts only when requested by the extension."

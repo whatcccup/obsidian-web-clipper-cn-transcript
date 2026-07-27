@@ -4,7 +4,7 @@ import { clearHelperSession, startHelper } from './native-client';
 function baseUrl(url: string): string {
 	const parsed = new URL(url);
 	if (parsed.hostname !== '127.0.0.1' && parsed.hostname !== 'localhost') {
-		throw new Error('Clip Note Helper 仅允许 localhost 或 127.0.0.1');
+		throw new Error('Transcript Helper 仅允许 localhost 或 127.0.0.1');
 	}
 	return parsed.origin;
 }

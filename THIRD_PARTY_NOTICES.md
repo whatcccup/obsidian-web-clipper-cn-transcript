@@ -1,6 +1,6 @@
 # Third-Party Notices
 
-Clip Note contains, adapts, or draws implementation ideas from the following open-source projects. Each upstream project remains governed by its own license and copyright notices.
+Obsidian Web Clipper CN · Transcript contains, adapts, or draws implementation ideas from the following open-source projects. Each upstream project remains governed by its own license and copyright notices.
 
 ## Obsidian Web Clipper
 
@@ -9,7 +9,7 @@ Clip Note contains, adapts, or draws implementation ideas from the following ope
 - Copyright: Copyright (c) 2024 Obsidian
 - Local license copy: [`extension/LICENSE`](extension/LICENSE)
 
-The upstream project states that its trademarks, icons, marketing copy, and other marketing assets are excluded from the source-code MIT License. Clip Note does not claim ownership of the Obsidian name, trademarks, icons, or brand assets.
+The upstream project states that its trademarks, icons, marketing copy, and other marketing assets are excluded from the source-code MIT License. Obsidian Web Clipper CN · Transcript does not claim ownership of the Obsidian name, trademarks, icons, or brand assets.
 
 ## Obsidian Web Clipper CN
 
@@ -56,11 +56,10 @@ SOFTWARE.
 - Project: https://github.com/SocialSisterYi/bcut-asr
 - License: MIT
 
-Clip Note's BCut client references the public endpoint sequence and result format documented and implemented by the upstream project. See the upstream repository for its complete copyright and license notice.
+The Transcript Generator BCut client references the public endpoint sequence and result format documented and implemented by the upstream project. See the upstream repository for its complete copyright and license notice.
 
 ## Runtime dependencies
 
 The npm and Python dependencies declared in `extension/package.json` and `helper/pyproject.toml` are distributed under their respective licenses. Building a binary distribution may require collecting and shipping the corresponding dependency license texts separately.
 
 This file is informational and does not replace any upstream license file.
-

@@ -30,7 +30,7 @@ for arg in "$@"; do
 done
 
 if [ -d "$INSTALL_DIR" ] && [ "$FORCE" != true ]; then
-  echo "Error: an existing Clip Note installation was found." >&2
+  echo "Error: an existing Transcript Helper installation was found." >&2
   echo "Run the repository root install.sh to confirm an overwrite installation." >&2
   exit 2
 fi
@@ -72,13 +72,13 @@ chmod 755 "$BIN_DIR/clip-note-launcher"
 cat > "$NATIVE_DIR/$HOST_NAME.json" <<EOF
 {
   "name": "$HOST_NAME",
-  "description": "Clip Note on-demand Helper launcher",
+  "description": "Transcript Generator on-demand Helper launcher",
   "path": "$BIN_DIR/clip-note-launcher",
   "type": "stdio",
   "allowed_origins": ["chrome-extension://$EXTENSION_ID/"]
 }
 EOF
 
-echo "Clip Note installed without LaunchAgent."
+echo "Transcript Helper installed without LaunchAgent."
 echo "Native host: $NATIVE_DIR/$HOST_NAME.json"
 echo "Helper starts only when the browser extension requests it."
