@@ -95,7 +95,7 @@ Bilibili 和 YouTube 分别支持：
 本项目由三个组件组成：
 
 ```text
-ClipNote/
+obsidian-web-clipper-cn-transcript/
 ├── extension/   # Obsidian Web Clipper CN 扩展源码
 ├── helper/      # 下载、ASR、模型和缓存服务
 └── launcher/    # Native Messaging 启动器与安装脚本
@@ -131,15 +131,15 @@ Helper 每次启动会生成临时会话令牌。扩展访问本地 API 时必�
 首次安装时，先克隆仓库并进入仓库文件夹，再运行安装脚本：
 
 ```bash
-git clone https://github.com/whatcccup/ClipNote.git
-cd ClipNote
+git clone https://github.com/whatcccup/obsidian-web-clipper-cn-transcript.git
+cd obsidian-web-clipper-cn-transcript
 bash install.sh
 ```
 
-如果源码已经下载到电脑，请先进入实际文件夹。例如 GitHub 压缩包通常解压为 `ClipNote-main`：
+如果源码已经下载到电脑，请先进入实际文件夹。例如 GitHub 压缩包通常解压为 `obsidian-web-clipper-cn-transcript-main`：
 
 ```bash
-cd ~/Downloads/ClipNote-main
+cd ~/Downloads/obsidian-web-clipper-cn-transcript-main
 bash install.sh
 ```
 
@@ -159,7 +159,7 @@ bash install.sh
 覆盖安装也需要先进入新版源码文件夹：
 
 ```bash
-cd /你的实际路径/ClipNote
+cd /你的实际路径/obsidian-web-clipper-cn-transcript
 bash install.sh --yes
 ```
 
@@ -174,6 +174,8 @@ Helper 会安装到：
 ```text
 ~/Library/Application Support/ClipNote/
 ```
+
+该目录名是 `v0.2.0` 已发布版本的本机兼容标识。项目和源码目录已改名，但安装目录、浏览器存储键和 Native Messaging Host 暂时保留旧标识，避免覆盖升级后丢失 Helper、Cookies、模型与设置。
 
 并注册 Native Messaging Host：
 
@@ -199,7 +201,7 @@ Helper 会安装到：
 如果最初通过 Git clone 安装，先进入仓库目录，再运行：
 
 ```bash
-cd /你的实际路径/ClipNote
+cd /你的实际路径/obsidian-web-clipper-cn-transcript
 bash update.sh
 ```
 
@@ -208,7 +210,7 @@ bash update.sh
 如果最初下载的是 GitHub 源码压缩包，请重新下载最新版源码并运行：
 
 ```bash
-cd ~/Downloads/ClipNote-main
+cd ~/Downloads/obsidian-web-clipper-cn-transcript-main
 bash install.sh --yes
 ```
 

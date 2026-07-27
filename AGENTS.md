@@ -1,6 +1,6 @@
 # Obsidian Web Clipper CN · Transcript 项目规则
 
-本文件适用于 `ClipNote/` 目录及其所有子目录，并继承上级工作区的通用规则。
+本文件适用于 `obsidian-web-clipper-cn-transcript/` 目录及其所有子目录，并继承上级工作区的通用规则。
 
 ## 中文与编码
 
