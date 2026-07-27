@@ -81,7 +81,7 @@ async function setJobBadge(status: 'active' | 'failed' | 'clear'): Promise<void>
 }
 
 function renderActiveStage(status: HTMLElement, stage: string): void {
-	status.textContent = `${stage}。任务已提交，关闭弹窗不会取消；重新打开可查看进度。`;
+	status.textContent = `${stage}。任务已提交，关闭剪藏界面不会取消；重新打开可查看进度。`;
 }
 
 async function monitorJob(
@@ -163,7 +163,7 @@ export async function updateClipNotePanel(
 		: '使用 Clip Note 生成字幕';
 	status.textContent = existingJob?.videoKey === videoKey && existingJob.status === 'failed'
 		? `上次生成失败：${existingJob.error || '未知错误'}`
-		: '点击后将启动本地 Helper。任务提交后可以关闭弹窗。';
+		: '点击后将启动本地 Helper。任务提交后可以关闭剪藏界面。';
 	button.onclick = async () => {
 		button.disabled = true;
 		button.textContent = '正在启动';
