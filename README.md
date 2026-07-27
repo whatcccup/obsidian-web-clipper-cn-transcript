@@ -99,10 +99,18 @@ Bilibili 和 YouTube 分别支持：
 
 ```text
 obsidian-web-clipper-cn-transcript/
-├── extension/   # Obsidian Web Clipper CN 扩展源码
+├── extension/   # Chrome 扩展源码；安装后在其中生成 dist/
 ├── helper/      # 下载、ASR、模型和缓存服务
-└── launcher/    # Native Messaging 启动器与安装脚本
+├── launcher/    # macOS Native Messaging 启动器
+├── install.sh   # 一键安装和覆盖安装
+└── update.sh    # Git 更新和覆盖安装
 ```
+
+### 为什么 `extension` 下还有 `dist`
+
+`extension/src` 是需要编译的 TypeScript、SCSS 和 HTML 源码，不能直接交给 Chrome 加载。运行 `install.sh` 后，Webpack 会把浏览器可以执行的 JavaScript、CSS、HTML、图标和 `manifest.json` 写入 `extension/dist`，Chrome 的“加载未打包的扩展程序”必须选择这个目录。
+
+`dist`、`node_modules`、Python `.venv` 和本地缓存均由安装过程生成并被 Git 忽略，不包含在 GitHub 源码下载中。仓库不再生成独立 ZIP 构建包。
 
 浏览器扩展不能直接执行本地程序，因此使用 Chrome Native Messaging 调用一次性 Launcher：
 
@@ -302,7 +310,7 @@ uv run python -c "import clip_note_helper.api"
 - BCut 使用非官方公开接口，接口可能随必剪服务变化。
 - YouTube 下载能力依赖 `yt-dlp`，平台策略变化可能需要及时升级。
 - Faster Whisper 大模型会占用较多磁盘、内存和处理时间。
-- 当前只发布 Chrome/Chromium 安装流程；Firefox 和 Safari 尚未完成 Transcript Generator 联调与发行验证。
+- 仅保留 Chrome/Chromium 源码与构建流程，不提供 Firefox、Safari、CLI 或独立 API 发行版本。
 
 ## 项目来源与致谢
 

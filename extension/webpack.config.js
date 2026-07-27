@@ -2,8 +2,6 @@ const path = require('path');
 const fs = require('fs');
 const CopyPlugin = require('copy-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-const ZipPlugin = require('zip-webpack-plugin');
-const package = require('./package.json');
 const webpack = require('webpack');
 const TerserPlugin = require('terser-webpack-plugin');
 
@@ -21,20 +19,8 @@ function removeDSStore(dir) {
 }
 
 module.exports = (env, argv) => {
-	const isFirefox = env.BROWSER === 'firefox';
-	const isSafari = env.BROWSER === 'safari';
 	const isProduction = argv.mode === 'production';
-
-	const getOutputDir = () => {
-		if (isProduction) {
-			return isFirefox ? 'dist_firefox' : (isSafari ? 'dist_safari' : 'dist');
-		} else {
-			return isFirefox ? 'dev_firefox' : (isSafari ? 'dev_safari' : 'dev');
-		}
-	};
-
-	const outputDir = getOutputDir();
-	const browserName = isFirefox ? 'firefox' : (isSafari ? 'safari' : 'chrome');
+	const outputDir = isProduction ? 'dist' : 'dev';
 
 	const mainConfig = {
 		mode: argv.mode,
@@ -54,6 +40,7 @@ module.exports = (env, argv) => {
 			path: path.resolve(__dirname, outputDir),
 			filename: '[name].js',
 			module: false,
+			clean: true,
 		},
 		devtool: isProduction ? false : 'source-map',
 		optimization: {
@@ -138,11 +125,7 @@ module.exports = (env, argv) => {
 		plugins: [
 			new CopyPlugin({
 				patterns: [
-					{ 
-						from: isFirefox ? "src/manifest.firefox.json" : 
-							  (isSafari ? "src/manifest.safari.json" : "src/manifest.chrome.json"), 
-						to: "manifest.json" 
-					},
+					{ from: "src/manifest.chrome.json", to: "manifest.json" },
 					{ from: "src/popup.html", to: "popup.html" },
 					{ from: "src/side-panel.html", to: "side-panel.html" },
 					{ from: "src/settings.html", to: "settings.html" },
@@ -171,12 +154,6 @@ module.exports = (env, argv) => {
 				'process.env.NODE_ENV': JSON.stringify(argv.mode),
 				'DEBUG_MODE': JSON.stringify(!isProduction)
 			}),
-			...(isProduction ? [
-				new ZipPlugin({
-					path: path.resolve(__dirname, 'builds'),
-					filename: `obsidian-web-clipper-${package.version}-${browserName}.zip`,
-				})
-			] : [])
 		]
 	};
 

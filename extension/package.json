@@ -1,34 +1,12 @@
 {
-	"name": "obsidian-clipper",
+	"name": "obsidian-web-clipper-cn-transcript",
 	"version": "0.2.0",
-	"description": "Official web clipper for Obsidian.",
-	"bin": {
-		"obsidian-clipper": "./dist/cli.cjs"
-	},
-	"files": [
-		"dist"
-	],
-	"exports": {
-		".": "./dist/cli.cjs",
-		"./api": "./dist/api.mjs"
-	},
+	"description": "Chrome extension source for Obsidian Web Clipper CN · Transcript.",
 	"scripts": {
-		"defuddle-dev": "node scripts/set-defuddle-dev.js",
-		"defuddle-prod": "node scripts/set-defuddle-prod.js",
 		"dev:chrome": "webpack --watch --env BROWSER=chrome --mode development",
-		"dev:firefox": "webpack --watch --env BROWSER=firefox --mode development",
-		"dev:safari": "webpack --watch --env BROWSER=safari --mode development",
 		"build:chrome": "webpack --env BROWSER=chrome --mode production",
-		"build:firefox": "webpack --env BROWSER=firefox --mode production",
-		"build:safari": "webpack --env BROWSER=safari --mode production",
-		"build": "npm run build:chrome && npm run build:firefox && npm run build:safari",
-		"build:cli": "node scripts/build-cli.mjs",
-		"build:api": "node scripts/build-api.mjs",
-		"dev": "npm run dev:chrome",
-		"update-locales": "ts-node --project scripts/tsconfig.json scripts/update-locales.ts",
-		"check-strings": "ts-node --project scripts/tsconfig.json scripts/check-unused-strings.ts",
-		"add-locale": "ts-node --project scripts/tsconfig.json scripts/add-locale.ts",
-		"prepublishOnly": "npm run build:cli && npm run build:api"
+		"build": "npm run build:chrome",
+		"dev": "npm run dev:chrome"
 	},
 	"devDependencies": {
 		"@types/chrome": "^0.0.270",
@@ -38,21 +16,16 @@
 		"@types/webpack-env": "^1.18.5",
 		"copy-webpack-plugin": "^14.0.0",
 		"css-loader": "^7.1.2",
-		"dotenv": "^16.4.1",
-		"esbuild": "^0.28.1",
 		"mini-css-extract-plugin": "^2.9.1",
 		"sass": "^1.77.8",
 		"sass-loader": "^16.0.1",
 		"ts-loader": "^9.5.1",
-		"ts-node": "^10.9.2",
 		"typescript": "^5.5.4",
 		"webextension-polyfill": "^0.12.0",
 		"webpack": "^5.97.1",
-		"webpack-cli": "^5.1.4",
-		"zip-webpack-plugin": "^4.0.1"
+		"webpack-cli": "^5.1.4"
 	},
 	"dependencies": {
-		"@types/safari-extension": "^0.0.33",
 		"dayjs": "^1.11.13",
 		"defuddle": "^0.19.0",
 		"dompurify": "^3.0.9",
