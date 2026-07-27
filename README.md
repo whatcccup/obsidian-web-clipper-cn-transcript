@@ -2,6 +2,9 @@
 
 ![Transcript Generator 图标](extension/src/icons/clip-note.svg)
 
+> [!IMPORTANT]
+> 本项目仅支持 **macOS + Chrome/Chromium**。不支持 Windows 或 Linux，并且当前没有开发 Windows/Linux 版本的计划。
+
 在 Obsidian Web Clipper CN 中补充无字幕视频的 transcript 生成能力。
 
 Transcript Generator 不建立另一套笔记生成或保存流程。它只在 Bilibili / YouTube 视频没有平台字幕时，按需下载音轨并生成带时间戳的 transcript，然后把结果写回 Obsidian Web Clipper 原有的 `{{transcript}}` 变量。模板、Interpreter、属性和保存到 Obsidian 的流程仍由 Web Clipper 负责。
@@ -117,7 +120,7 @@ Helper 每次启动会生成临时会话令牌。扩展访问本地 API 时必�
 
 ## 安装与升级
 
-### 环境要求
+### 环境要求（仅支持 macOS）
 
 - macOS
 - Chrome 或其他 Chromium 浏览器
@@ -294,7 +297,7 @@ uv run python -c "import clip_note_helper.api"
 
 ## 已知限制
 
-- 当前安装器仅支持 macOS 用户级安装。
+- 本项目仅支持 macOS，不支持 Windows 或 Linux，当前没有开发其他桌面系统版本的计划。
 - 当前源码安装仍依赖 Node.js 和 `uv`，还不是面向普通用户的零依赖安装包。
 - BCut 使用非官方公开接口，接口可能随必剪服务变化。
 - YouTube 下载能力依赖 `yt-dlp`，平台策略变化可能需要及时升级。
