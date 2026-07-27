@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "transcript-helper"
-version = "0.2.1"
+version = "0.2.2"
 description = "Local transcript generator for Obsidian Web Clipper CN"
 requires-python = ">=3.11,<3.13"
 dependencies = [

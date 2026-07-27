@@ -9,11 +9,11 @@
 
 Transcript Generator 不建立另一套笔记生成或保存流程。它只在 Bilibili / YouTube 视频没有平台字幕时，按需下载音轨并生成带时间戳的 transcript，然后把结果写回 Obsidian Web Clipper 原有的 `{{transcript}}` 变量。模板、Interpreter、属性和保存到 Obsidian 的流程仍由 Web Clipper 负责。
 
-> 当前产品版本：`v0.2.1` 源码版。代码基线为 [Obsidian Web Clipper CN 1.4.6](https://github.com/nextcaicai/obsidian-clipper-cn/releases/tag/1.4.6)。已完成 macOS + Chrome/Chromium 的一键安装、覆盖安装和真实视频流程验证。本项目不计划提供预编译独立程序，安装与升级统一通过源码脚本完成。
+> 当前产品版本：`v0.2.2`。代码基线为 [Obsidian Web Clipper CN 1.4.6](https://github.com/nextcaicai/obsidian-clipper-cn/releases/tag/1.4.6)。已完成 macOS + Chrome/Chromium 的一键安装、覆盖安装和真实视频流程验证。Release 提供预构建 Chrome 扩展和 macOS 源码安装包，但不提供预编译独立程序。
 
 ## 版本号如何定义
 
-- `v0.2.1` 是本项目自身的产品版本，同时写入浏览器扩展和 Transcript Helper。
+- `v0.2.2` 是本项目自身的产品版本，同时写入浏览器扩展和 Transcript Helper。
 - `1.4.6` 是 Obsidian Web Clipper CN 上游版本，只作为代码基线记录，不再混用为本项目版本。
 - Obsidian 官方 Web Clipper、Web Clipper CN 和本项目各自独立发布，因此版本号本来就不会自动保持一致。
 - 后续合并新的 CN 上游版本时，会更新“代码基线”；只有本项目发布功能或修复时，才更新产品版本。
@@ -132,12 +132,42 @@ Helper 每次启动会生成临时会话令牌。扩展访问本地 API 时必�
 
 - macOS
 - Chrome 或其他 Chromium 浏览器
-- Node.js 18+
-- [`uv`](https://docs.astral.sh/uv/)
+- [Node.js](https://nodejs.org/) 18 或更高版本（安装 Node.js 时会同时提供 npm）
+- [`uv`](https://docs.astral.sh/uv/getting-started/installation/)
 
-本项目通过源码安装。用户不需要预先安装指定版本的 Python：安装脚本会让 `uv` 在项目专用目录中准备隔离的 Python 3.11 运行时。电脑上已有 Python 3.12、3.13 或更高版本不会冲突，也不会被替换。这里固定 Helper 运行时，是为了让 Faster Whisper、CTranslate2 和下载依赖使用经过验证的一致环境。
+> [!IMPORTANT]
+> 运行 `install.sh` 前，用户必须已经完成 Node.js 和 `uv` 的安装。安装脚本不会自动安装这两个前置工具；缺少任意一个都会停止安装。
 
-### 1. 一键安装或覆盖安装
+安装前可以在终端检查：
+
+```bash
+node --version
+npm --version
+uv --version
+```
+
+其中 `node --version` 应显示 `v18` 或更高版本，另外两个命令应能正常显示版本号。如果尚未安装，并且电脑已经使用 Homebrew，可以运行：
+
+```bash
+brew install node uv
+```
+
+如果不使用 Homebrew，请分别按照 [Node.js 官网](https://nodejs.org/)和 [`uv` 官方安装说明](https://docs.astral.sh/uv/getting-started/installation/)完成安装，再继续下面的步骤。
+
+用户不需要预先安装 Python。`uv` 会在项目专用目录中准备隔离的 Python 3.11 运行时；电脑上已有更低或更高版本的 Python 都不会冲突，也不会被替换。这里固定 Helper 运行时，是为了让 Faster Whisper、CTranslate2 和下载依赖使用经过验证的一致环境。
+
+### 1. 使用 Release 安装包（推荐）
+
+在 [GitHub Releases](https://github.com/whatcccup/obsidian-web-clipper-cn-transcript/releases) 下载 `obsidian-web-clipper-cn-transcript-vX.Y.Z-macos.zip`，解压后进入该文件夹：
+
+```bash
+cd ~/Downloads/obsidian-web-clipper-cn-transcript-vX.Y.Z-macos
+bash install.sh
+```
+
+macOS 安装包已经包含构建完成的 Chrome 扩展，因此不会执行 npm 安装或 Webpack 构建；它仍会通过 `uv` 准备 Helper 的 Python 3.11 隔离环境。Release 同时提供 `-chrome.zip`，该文件只包含浏览器扩展，不能单独提供本地字幕生成能力。
+
+### 2. 从源码一键安装或覆盖安装
 
 首次安装时，先克隆仓库并进入仓库文件夹，再运行安装脚本：
 
@@ -156,10 +186,13 @@ bash install.sh
 
 脚本会完成以下操作：
 
-- 检查 Node.js、npm 和 `uv`
-- 构建 Chrome 扩展
+- 检查 Node.js 和 `uv`；从源码安装时还会检查 npm
+- 从源码安装时构建 Chrome 扩展；Release 安装包直接使用预构建扩展
 - 安装按需 Helper 与 Native Messaging Host
+- 提供 Faster Whisper 模型选择菜单，可立即下载任一支持模型，也可以跳过并稍后在扩展设置页下载
 - 明确保证不创建 LaunchAgent
+
+交互安装会提供 `tiny`、`base`、`small`、`medium`、`large-v3`、`large-v3-turbo` 和“跳过”选项。选择模型后会在 Helper 安装完成后开始下载；加载扩展后，需要在 `Settings → Transcript Generator` 中选择同一个模型。下载失败不会撤销已经完成的扩展和 Helper 安装，可以稍后在设置页重试。使用 `--yes` 执行无交互覆盖安装时默认跳过模型下载，也不会删除已经存在的模型。
 
 如果检测到已经安装的 Transcript Helper，脚本会先询问是否覆盖。覆盖安装会更新 Helper、Launcher 和扩展构建产物，但不会删除：
 
@@ -200,7 +233,7 @@ Helper 会安装到：
 ~/Library/LaunchAgents/
 ```
 
-### 2. 加载或重新加载扩展
+### 3. 加载或重新加载扩展
 
 1. 打开 `chrome://extensions`。
 2. 启用“开发者模式”。
@@ -218,12 +251,14 @@ bash update.sh
 
 脚本只接受 Git 的 fast-forward 更新，然后自动执行覆盖安装。完成后打开 `chrome://extensions`，在原扩展卡片上点击“重新加载”。浏览器中的 Transcript Generator 设置、Cookies、模板、本地 Whisper 模型和 transcript 缓存会保留。
 
-如果最初下载的是 GitHub 源码压缩包，请重新下载最新版源码并运行：
+如果最初使用的是 Release macOS 安装包或 GitHub 源码压缩包，请重新下载最新版对应压缩包并运行：
 
 ```bash
-cd ~/Downloads/obsidian-web-clipper-cn-transcript-main
+cd ~/Downloads/obsidian-web-clipper-cn-transcript-vX.Y.Z-macos
 bash install.sh --yes
 ```
+
+如果下载的是 GitHub 自动生成的 Source code，解压目录通常为 `obsidian-web-clipper-cn-transcript-X.Y.Z`，请改用对应的实际目录名。
 
 不要直接用 Obsidian Web Clipper CN 的 Release 文件覆盖 `extension/`，否则 Transcript Generator 的设置、按钮和 Helper 联动代码会被移除。
 
@@ -236,7 +271,7 @@ bash install.sh --yes
 
 这种方式不会让未经验证的上游改动直接覆盖 Transcript Generator。当前仓库是源码快照起步，与上游仓库没有可直接无冲突合并的共同 Git 历史，因此维护者需要按版本比较并移植上游变更，而不是让用户自行 `git merge`。
 
-### 3. 启用 Transcript Generator
+### 4. 启用 Transcript Generator
 
 进入 Obsidian Web Clipper CN 设置页：
 
