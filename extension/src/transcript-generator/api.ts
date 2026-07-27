@@ -1,4 +1,4 @@
-import { ClipNoteAsrSettings, ClipNoteJobStatus, HelperHealth, StoredCookie, TranscriptResult, WhisperModelSize } from './types';
+import { TranscriptGeneratorAsrSettings, TranscriptGeneratorJobStatus, HelperHealth, StoredCookie, TranscriptResult, WhisperModelSize } from './types';
 import { clearHelperSession, startHelper } from './native-client';
 
 function baseUrl(url: string): string {
@@ -43,7 +43,7 @@ export const getHealth = (): Promise<HelperHealth> => request('/v1/health');
 
 export async function createTranscription(
 	url: string,
-	asr: ClipNoteAsrSettings,
+	asr: TranscriptGeneratorAsrSettings,
 	cookies: StoredCookie[],
 ): Promise<string> {
 	const created = await request<{ task_id: string }>('/v1/transcriptions', {
@@ -56,10 +56,10 @@ export async function createTranscription(
 
 export async function waitForTranscription(
 	taskId: string,
-	onStage: (stage: string, status: ClipNoteJobStatus) => void | Promise<void>,
+	onStage: (stage: string, status: TranscriptGeneratorJobStatus) => void | Promise<void>,
 ): Promise<TranscriptResult> {
 	for (;;) {
-		const task = await request<{ status: ClipNoteJobStatus; stage: string; result?: TranscriptResult; error?: string }>(
+		const task = await request<{ status: TranscriptGeneratorJobStatus; stage: string; result?: TranscriptResult; error?: string }>(
 				`/v1/transcriptions/${encodeURIComponent(taskId)}`,
 		);
 		await onStage(task.stage, task.status);

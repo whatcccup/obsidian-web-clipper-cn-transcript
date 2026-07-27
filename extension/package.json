@@ -1,6 +1,6 @@
 {
 	"name": "obsidian-web-clipper-cn-transcript",
-	"version": "0.2.0",
+	"version": "0.2.1",
 	"description": "Chrome extension source for Obsidian Web Clipper CN · Transcript.",
 	"scripts": {
 		"dev:chrome": "webpack --watch --env BROWSER=chrome --mode development",

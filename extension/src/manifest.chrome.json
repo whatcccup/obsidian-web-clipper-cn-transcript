@@ -4,7 +4,7 @@
 	"name": "Obsidian Web Clipper CN · Transcript",
 	"key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAj3feyrprW9gFiXZCF8jcbEmVFkAF7vu8M4X2A18QpAYszLoRCLwB2Q5yq1UvcaokRJRnlCflvdz8hWLrqAtjI3BgCu9pB0auBzZ4yIg0S87DDmpwOycFz+cP7vIWACL7HReENSOHARSw/UqrmLQjz6EfsKqRvrAQX3HUEq5N0PArbTWuERUm14VNh8ptK8Va1qzYjcmJQP/j2gthj/2syDGMTBaLmapsznSUTeQFcgZw7W1pr0QQamvge3l34q5cEW+G2Xip7Hfov36UfbeMPjhCm0oeLpFi0/zSHhByYfuGUbrIk4d+uTc8LLC1+2k5QzBTLscDt0XSS1V+fHMT0QIDAQAB",
 	"homepage_url": "https://github.com/whatcccup/obsidian-web-clipper-cn-transcript",
-	"version": "0.2.0",
+	"version": "0.2.1",
 	"description": "Obsidian Web Clipper 中文增强版，支持为无字幕视频生成时间戳字幕。",
 	"permissions": [
 		"activeTab",

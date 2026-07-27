@@ -23,7 +23,7 @@ import { sanitizeFileName } from '../utils/string-utils';
 import { saveFile } from '../utils/file-utils';
 import { translatePage, getMessage, setupLanguageAndDirection } from '../utils/i18n';
 import { formatPropertyValue } from '../utils/shared';
-import { updateClipNotePanel } from '../clip-note/popup-controller';
+import { updateTranscriptGeneratorPanel } from '../transcript-generator/popup-controller';
 
 interface ReaderModeResponse {
 	success: boolean;
@@ -735,7 +735,7 @@ async function refreshFields(tabId: number, { checkTemplateTriggers = true, rebu
 				// Update variables panel if it's open
 				updateVariablesPanel(currentTemplate, currentVariables);
 
-				await updateClipNotePanel(
+				await updateTranscriptGeneratorPanel(
 					currentUrl,
 					Boolean(currentVariables['{{transcript}}']?.trim()),
 					async (transcript) => {

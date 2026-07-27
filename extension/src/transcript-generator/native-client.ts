@@ -1,6 +1,6 @@
 import browser from '../utils/browser-polyfill';
 
-const NATIVE_HOST = 'cn.clipnote.launcher';
+const NATIVE_HOST = 'cn.transcript.generator.launcher';
 
 export type HelperRuntimeStatus = 'not-installed' | 'stopped' | 'starting' | 'ready' | 'error';
 

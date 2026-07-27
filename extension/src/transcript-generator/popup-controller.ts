@@ -1,10 +1,10 @@
 import browser from '../utils/browser-polyfill';
 import { createTranscription, getHealth, getModelStatus, waitForTranscription } from './api';
 import { readBrowserCookies } from './cookies';
-import { loadActiveJob, loadClipNoteSettings, loadPanelCollapsed, saveActiveJob, saveCookieSettings, savePanelCollapsed } from './storage';
-import { ClipNoteJobState, ClipNotePlatform, StoredCookie, TranscriptResult } from './types';
+import { loadActiveJob, loadTranscriptGeneratorSettings, loadPanelCollapsed, saveActiveJob, saveCookieSettings, savePanelCollapsed } from './storage';
+import { TranscriptGeneratorJobState, TranscriptGeneratorPlatform, StoredCookie, TranscriptResult } from './types';
 
-function platformForUrl(url: string): ClipNotePlatform | null {
+function platformForUrl(url: string): TranscriptGeneratorPlatform | null {
 	const hostname = new URL(url).hostname.replace(/^www\./, '');
 	if (hostname === 'bilibili.com' || hostname.endsWith('.bilibili.com') || hostname === 'b23.tv') return 'bilibili';
 	if (hostname === 'youtube.com' || hostname.endsWith('.youtube.com') || hostname === 'youtu.be') return 'youtube';
@@ -21,7 +21,7 @@ function timestamp(seconds: number): string {
 		: `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
 }
 
-export function clipNoteVideoKey(url: string): string {
+export function transcriptGeneratorVideoKey(url: string): string {
 	const parsed = new URL(url);
 	const hostname = parsed.hostname.replace(/^www\./, '');
 	if (hostname === 'youtu.be') return `youtube:${parsed.pathname.split('/').filter(Boolean)[0] || parsed.pathname}`;
@@ -41,8 +41,8 @@ export function formatTranscript(result: TranscriptResult): string {
 		: result.fullText;
 }
 
-async function cookiesForTask(platform: ClipNotePlatform): Promise<StoredCookie[]> {
-	const settings = await loadClipNoteSettings();
+async function cookiesForTask(platform: TranscriptGeneratorPlatform): Promise<StoredCookie[]> {
+	const settings = await loadTranscriptGeneratorSettings();
 	const config = settings.cookies[platform];
 	if (config.mode === 'off') return [];
 	if (config.mode === 'manual') return config.cookies;
@@ -85,7 +85,7 @@ function renderActiveStage(status: HTMLElement, stage: string): void {
 }
 
 async function monitorJob(
-	initialJob: ClipNoteJobState,
+	initialJob: TranscriptGeneratorJobState,
 	button: HTMLButtonElement,
 	status: HTMLElement,
 	onTranscript: (transcript: string) => Promise<void>,
@@ -120,17 +120,17 @@ async function monitorJob(
 	}
 }
 
-export async function updateClipNotePanel(
+export async function updateTranscriptGeneratorPanel(
 	url: string,
 	hasTranscript: boolean,
 	onTranscript: (transcript: string) => Promise<void>,
 ): Promise<void> {
-	const panel = document.getElementById('clip-note-panel') as HTMLElement | null;
-	const title = document.getElementById('clip-note-title') as HTMLElement | null;
-	const toggle = document.getElementById('clip-note-toggle') as HTMLButtonElement | null;
-	const content = document.getElementById('clip-note-panel-content') as HTMLElement | null;
-	const button = document.getElementById('clip-note-generate') as HTMLButtonElement | null;
-	const status = document.getElementById('clip-note-status') as HTMLElement | null;
+	const panel = document.getElementById('transcript-generator-panel') as HTMLElement | null;
+	const title = document.getElementById('transcript-generator-title') as HTMLElement | null;
+	const toggle = document.getElementById('transcript-generator-toggle') as HTMLButtonElement | null;
+	const content = document.getElementById('transcript-generator-panel-content') as HTMLElement | null;
+	const button = document.getElementById('transcript-generator-generate') as HTMLButtonElement | null;
+	const status = document.getElementById('transcript-generator-status') as HTMLElement | null;
 	if (!panel || !title || !toggle || !content || !button || !status) return;
 	title.textContent = 'Transcript Generator';
 	let collapsed = await loadPanelCollapsed();
@@ -148,13 +148,13 @@ export async function updateClipNotePanel(
 		await savePanelCollapsed(collapsed);
 	};
 	const platform = platformForUrl(url);
-	const settings = await loadClipNoteSettings();
+	const settings = await loadTranscriptGeneratorSettings();
 	if (!settings.general.enabled || !platform || hasTranscript) {
 		panel.hidden = true;
 		return;
 	}
 	panel.hidden = false;
-	const videoKey = clipNoteVideoKey(url);
+	const videoKey = transcriptGeneratorVideoKey(url);
 	const existingJob = await loadActiveJob();
 	if (existingJob?.videoKey === videoKey && existingJob.status === 'completed' && existingJob.result) {
 		await onTranscript(formatTranscript(existingJob.result));
@@ -198,7 +198,7 @@ export async function updateClipNotePanel(
 			status.textContent = '正在创建字幕任务…';
 			const taskId = await createTranscription(url, settings.asr, cookies);
 			const now = Date.now();
-			const job: ClipNoteJobState = {
+			const job: TranscriptGeneratorJobState = {
 				taskId,
 				url,
 				videoKey,

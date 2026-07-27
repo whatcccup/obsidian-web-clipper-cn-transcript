@@ -1,17 +1,17 @@
 import browser from '../utils/browser-polyfill';
-import { ClipNotePlatform, StoredCookie } from './types';
+import { TranscriptGeneratorPlatform, StoredCookie } from './types';
 
-const PLATFORM_DOMAINS: Record<ClipNotePlatform, string[]> = {
+const PLATFORM_DOMAINS: Record<TranscriptGeneratorPlatform, string[]> = {
 	bilibili: ['bilibili.com'],
 	youtube: ['youtube.com', 'google.com'],
 };
 
-export function isCookieForPlatform(cookie: StoredCookie, platform: ClipNotePlatform): boolean {
+export function isCookieForPlatform(cookie: StoredCookie, platform: TranscriptGeneratorPlatform): boolean {
 	const domain = cookie.domain.replace(/^\./, '').toLowerCase();
 	return PLATFORM_DOMAINS[platform].some(allowed => domain === allowed || domain.endsWith(`.${allowed}`));
 }
 
-export function parseCookieHeader(input: string, platform: ClipNotePlatform): StoredCookie[] {
+export function parseCookieHeader(input: string, platform: TranscriptGeneratorPlatform): StoredCookie[] {
 	const domain = platform === 'bilibili' ? '.bilibili.com' : '.youtube.com';
 	const header = input.trim().replace(/^cookie\s*:\s*/i, '');
 	return header.split(';').map(part => part.trim()).filter(Boolean).map(part => {
@@ -29,7 +29,7 @@ export function parseCookieHeader(input: string, platform: ClipNotePlatform): St
 	});
 }
 
-export function parseNetscapeCookies(input: string, platform: ClipNotePlatform): StoredCookie[] {
+export function parseNetscapeCookies(input: string, platform: TranscriptGeneratorPlatform): StoredCookie[] {
 	const cookies = input.split(/\r?\n/).map(line => line.trim()).filter(line => line && (!line.startsWith('#') || line.startsWith('#HttpOnly_'))).map(line => {
 		const parts = line.split('\t');
 		if (parts.length < 7) throw new Error('cookies.txt 格式无效');
@@ -49,7 +49,7 @@ export function parseNetscapeCookies(input: string, platform: ClipNotePlatform):
 	return platformCookies;
 }
 
-export function parseManualCookies(input: string, platform: ClipNotePlatform): StoredCookie[] {
+export function parseManualCookies(input: string, platform: TranscriptGeneratorPlatform): StoredCookie[] {
 	const trimmed = input.trim();
 	if (!trimmed) throw new Error('请输入 Cookie');
 	const cookies = trimmed.includes('\t') ? parseNetscapeCookies(trimmed, platform) : parseCookieHeader(trimmed, platform);
@@ -57,7 +57,7 @@ export function parseManualCookies(input: string, platform: ClipNotePlatform): S
 	return cookies;
 }
 
-export async function readBrowserCookies(platform: ClipNotePlatform): Promise<StoredCookie[]> {
+export async function readBrowserCookies(platform: TranscriptGeneratorPlatform): Promise<StoredCookie[]> {
 	if (!browser.permissions?.request || !browser.cookies?.getAll) {
 		throw new Error('当前浏览器不支持 Cookies 自动读取');
 	}

@@ -32,7 +32,7 @@ class BcutClient:
         try:
             response = self.session.get(
                 f"{API_BASE_URL}/task/result",
-                params={"model_id": 7, "task_id": "clip-note-health-check"},
+                params={"model_id": 7, "task_id": "transcript-generator-health-check"},
                 timeout=5,
             )
             return response.status_code < 500

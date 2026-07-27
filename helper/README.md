@@ -6,12 +6,12 @@ Obsidian Web Clipper CN · Transcript 的本地字幕生成助手。它只监听
 
 ```bash
 uv sync --python 3.11
-uv run clip-note-helper
+uv run transcript-helper
 ```
 
 这里的 Python 3.11 是由 `uv` 管理的隔离运行时，不要求系统预装 Python 3.11，也不会替换用户已有的 Python 3.12、3.13 或更高版本。
 
-YouTube 的完整格式解析还需要本机安装 Node.js。模型和 transcript 缓存默认位于 `~/.cache/clip-note/`；任务音频及 Cookies 使用临时文件，任务结束后清理。
+YouTube 的完整格式解析还需要本机安装 Node.js。模型和 transcript 缓存默认位于 `~/.cache/transcript-generator/`；任务音频及 Cookies 使用临时文件，任务结束后清理。
 
 ## 隐私边界
 

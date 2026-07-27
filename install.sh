@@ -2,7 +2,8 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-INSTALL_DIR="$HOME/Library/Application Support/ClipNote"
+INSTALL_DIR="$HOME/Library/Application Support/TranscriptGenerator"
+LEGACY_INSTALL_DIR="$HOME/Library/Application Support/ClipNote"
 ASSUME_YES=false
 
 usage() {
@@ -39,8 +40,15 @@ for command_name in node npm uv; do
   fi
 done
 
+EXISTING_INSTALL_DIR=""
 if [ -d "$INSTALL_DIR" ]; then
-  echo "Existing Transcript Helper installation detected: $INSTALL_DIR"
+  EXISTING_INSTALL_DIR="$INSTALL_DIR"
+elif [ -d "$LEGACY_INSTALL_DIR" ]; then
+  EXISTING_INSTALL_DIR="$LEGACY_INSTALL_DIR"
+fi
+
+if [ -n "$EXISTING_INSTALL_DIR" ]; then
+  echo "Existing Transcript Helper installation detected: $EXISTING_INSTALL_DIR"
   echo "The Helper and Launcher program files will be overwritten."
   echo "Browser settings, Cookies, templates, local models, and transcript cache will be preserved."
   if [ "$ASSUME_YES" != true ]; then
@@ -65,7 +73,7 @@ echo "Building the Chrome extension..."
 (cd "$SCRIPT_DIR/extension" && npm install && npm run build:chrome)
 
 echo "Installing the on-demand Transcript Helper..."
-bash "$SCRIPT_DIR/launcher/install-clip-note.sh" --force
+bash "$SCRIPT_DIR/launcher/install-transcript.sh" --force
 
 echo
 echo "Obsidian Web Clipper CN · Transcript installation completed."

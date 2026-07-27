@@ -1,15 +1,15 @@
-export type ClipNoteProvider = 'bcut' | 'faster-whisper';
+export type TranscriptGeneratorProvider = 'bcut' | 'faster-whisper';
 export type WhisperModelSize = 'tiny' | 'base' | 'small' | 'medium' | 'large-v3' | 'large-v3-turbo';
 export type CookieMode = 'off' | 'browser' | 'manual';
 export type CookieStatus = 'empty' | 'ready' | 'stale' | 'invalid';
-export type ClipNotePlatform = 'bilibili' | 'youtube';
+export type TranscriptGeneratorPlatform = 'bilibili' | 'youtube';
 
-export interface ClipNoteGeneralSettings {
+export interface TranscriptGeneratorGeneralSettings {
 	enabled: boolean;
 }
 
-export interface ClipNoteAsrSettings {
-	provider: ClipNoteProvider;
+export interface TranscriptGeneratorAsrSettings {
+	provider: TranscriptGeneratorProvider;
 	whisperModel: WhisperModelSize;
 }
 
@@ -31,7 +31,7 @@ export interface PlatformCookieConfig {
 	status: CookieStatus;
 }
 
-export interface ClipNoteCookieSettings {
+export interface TranscriptGeneratorCookieSettings {
 	bilibili: PlatformCookieConfig;
 	youtube: PlatformCookieConfig;
 }
@@ -49,14 +49,14 @@ export interface TranscriptResult {
 	source: 'platform' | 'bcut' | 'faster-whisper';
 }
 
-export type ClipNoteJobStatus = 'queued' | 'downloading' | 'transcribing' | 'completed' | 'failed';
+export type TranscriptGeneratorJobStatus = 'queued' | 'downloading' | 'transcribing' | 'completed' | 'failed';
 
-export interface ClipNoteJobState {
+export interface TranscriptGeneratorJobState {
 	taskId: string;
 	url: string;
 	videoKey: string;
-	provider: ClipNoteProvider;
-	status: ClipNoteJobStatus;
+	provider: TranscriptGeneratorProvider;
+	status: TranscriptGeneratorJobStatus;
 	stage: string;
 	startedAt: number;
 	updatedAt: number;

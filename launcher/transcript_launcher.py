@@ -12,7 +12,7 @@ import urllib.request
 from pathlib import Path
 
 
-APP_DIR = Path.home() / "Library" / "Application Support" / "ClipNote"
+APP_DIR = Path.home() / "Library" / "Application Support" / "TranscriptGenerator"
 CONFIG_PATH = APP_DIR / "config.json"
 SESSION_PATH = APP_DIR / "runtime" / "session.json"
 LOG_PATH = APP_DIR / "logs" / "helper.log"
@@ -85,8 +85,8 @@ def start() -> dict:
     port = int(config.get("port", 8484))
     token = secrets.token_urlsafe(32)
     env = os.environ.copy()
-    env["CLIP_NOTE_TOKEN"] = token
-    env["CLIP_NOTE_IDLE_TIMEOUT"] = str(config.get("idleTimeoutSeconds", 900))
+    env["TRANSCRIPT_HELPER_TOKEN"] = token
+    env["TRANSCRIPT_HELPER_IDLE_TIMEOUT"] = str(config.get("idleTimeoutSeconds", 900))
     node_dir = config.get("nodeDir")
     if node_dir:
         env["PATH"] = f"{node_dir}:{env.get('PATH', '')}"
@@ -94,7 +94,7 @@ def start() -> dict:
     APP_DIR.joinpath("logs").mkdir(parents=True, exist_ok=True)
     with LOG_PATH.open("ab") as log:
         process = subprocess.Popen(
-            [python, "-m", "uvicorn", "clip_note_helper.api:app", "--host", "127.0.0.1", "--port", str(port)],
+            [python, "-m", "uvicorn", "transcript_helper.api:app", "--host", "127.0.0.1", "--port", str(port)],
             cwd=helper_dir,
             env=env,
             stdin=subprocess.DEVNULL,

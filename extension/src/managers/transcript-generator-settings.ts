@@ -1,8 +1,8 @@
-import { deleteModel, downloadModel, getHealth, getModelStatus, getTranscribers } from '../clip-note/api';
-import { parseManualCookies, readBrowserCookies } from '../clip-note/cookies';
-import { loadClipNoteSettings, saveAsrSettings, saveCookieSettings, saveGeneralSettings } from '../clip-note/storage';
-import { ClipNoteCookieSettings, ClipNotePlatform, PlatformCookieConfig, WhisperModelSize } from '../clip-note/types';
-import { getHelperStatus, restartHelper, startHelper, stopHelper } from '../clip-note/native-client';
+import { deleteModel, downloadModel, getHealth, getModelStatus, getTranscribers } from '../transcript-generator/api';
+import { parseManualCookies, readBrowserCookies } from '../transcript-generator/cookies';
+import { loadTranscriptGeneratorSettings, saveAsrSettings, saveCookieSettings, saveGeneralSettings } from '../transcript-generator/storage';
+import { TranscriptGeneratorCookieSettings, TranscriptGeneratorPlatform, PlatformCookieConfig, WhisperModelSize } from '../transcript-generator/types';
+import { getHelperStatus, restartHelper, startHelper, stopHelper } from '../transcript-generator/native-client';
 
 const formatDate = (value: number | null) => value ? new Date(value).toLocaleString() : '从未';
 
@@ -13,26 +13,26 @@ const COOKIE_STATUS_LABELS: Record<PlatformCookieConfig['status'], string> = {
 	invalid: '读取或格式验证失败',
 };
 
-function renderCookieSummary(platform: ClipNotePlatform, config: PlatformCookieConfig, message?: string): void {
-	const summary = document.getElementById(`clip-note-${platform}-summary`);
+function renderCookieSummary(platform: TranscriptGeneratorPlatform, config: PlatformCookieConfig, message?: string): void {
+	const summary = document.getElementById(`transcript-generator-${platform}-summary`);
 	if (!summary) return;
 	summary.dataset.status = config.status;
 	summary.textContent = message || `${COOKIE_STATUS_LABELS[config.status]} · ${config.cookies.length} 条 · 更新于 ${formatDate(config.updatedAt)}`;
 }
 
-async function savePlatformCookies(platform: ClipNotePlatform, cookies: ClipNoteCookieSettings, config: PlatformCookieConfig): Promise<void> {
+async function savePlatformCookies(platform: TranscriptGeneratorPlatform, cookies: TranscriptGeneratorCookieSettings, config: PlatformCookieConfig): Promise<void> {
 	cookies[platform] = config;
 	await saveCookieSettings(cookies);
 	renderCookieSummary(platform, config);
 }
 
-export async function initializeClipNoteSettings(): Promise<void> {
-	const settings = await loadClipNoteSettings();
-	const enabled = document.getElementById('clip-note-enabled') as HTMLInputElement;
-	const provider = document.getElementById('clip-note-provider') as HTMLSelectElement;
-	const model = document.getElementById('clip-note-whisper-model') as HTMLSelectElement;
-	const localControls = document.getElementById('clip-note-model-controls') as HTMLElement;
-	const remoteNotice = document.getElementById('clip-note-bcut-notice') as HTMLElement;
+export async function initializeTranscriptGeneratorSettings(): Promise<void> {
+	const settings = await loadTranscriptGeneratorSettings();
+	const enabled = document.getElementById('transcript-generator-enabled') as HTMLInputElement;
+	const provider = document.getElementById('transcript-generator-provider') as HTMLSelectElement;
+	const model = document.getElementById('transcript-generator-whisper-model') as HTMLSelectElement;
+	const localControls = document.getElementById('transcript-generator-model-controls') as HTMLElement;
+	const remoteNotice = document.getElementById('transcript-generator-bcut-notice') as HTMLElement;
 	enabled.checked = settings.general.enabled;
 	provider.value = settings.asr.provider;
 	model.value = settings.asr.whisperModel;
@@ -51,14 +51,14 @@ export async function initializeClipNoteSettings(): Promise<void> {
 	};
 	model.onchange = () => saveAsrSettings({ provider: provider.value as 'bcut' | 'faster-whisper', whisperModel: model.value as WhisperModelSize });
 
-	const connection = document.getElementById('clip-note-connection-status')!;
+	const connection = document.getElementById('transcript-generator-connection-status')!;
 	const renderRuntime = async () => {
 		const runtime = await getHelperStatus();
 		connection.textContent = runtime.status === 'ready'
 			? `已就绪 · v${runtime.health?.version || 'unknown'} · 空闲 ${runtime.health?.idleTimeoutSeconds || 900} 秒后退出`
 			: runtime.status === 'not-installed' ? '尚未安装 Transcript Helper' : 'Helper 未运行';
 	};
-	document.getElementById('clip-note-start')!.addEventListener('click', async () => {
+	document.getElementById('transcript-generator-start')!.addEventListener('click', async () => {
 		connection.textContent = '正在连接…';
 		try {
 			const runtime = await startHelper();
@@ -68,12 +68,12 @@ export async function initializeClipNoteSettings(): Promise<void> {
 			connection.textContent = `未连接 · ${(error as Error).message}`;
 		}
 	});
-	document.getElementById('clip-note-stop')!.addEventListener('click', async () => { await stopHelper(); await renderRuntime(); });
-	document.getElementById('clip-note-restart')!.addEventListener('click', async () => { await restartHelper(); await renderRuntime(); });
+	document.getElementById('transcript-generator-stop')!.addEventListener('click', async () => { await stopHelper(); await renderRuntime(); });
+	document.getElementById('transcript-generator-restart')!.addEventListener('click', async () => { await restartHelper(); await renderRuntime(); });
 	await renderRuntime();
 
-	const bcutStatus = document.getElementById('clip-note-bcut-status')!;
-	document.getElementById('clip-note-bcut-test')!.addEventListener('click', async () => {
+	const bcutStatus = document.getElementById('transcript-generator-bcut-status')!;
+	document.getElementById('transcript-generator-bcut-test')!.addEventListener('click', async () => {
 		bcutStatus.textContent = '正在连接必剪接口…';
 		try {
 			const transcribers = await getTranscribers();
@@ -84,7 +84,7 @@ export async function initializeClipNoteSettings(): Promise<void> {
 		}
 	});
 
-	const modelStatus = document.getElementById('clip-note-model-status')!;
+	const modelStatus = document.getElementById('transcript-generator-model-status')!;
 	const refreshModel = async () => {
 		try {
 			const result = await getModelStatus(model.value as WhisperModelSize);
@@ -94,22 +94,22 @@ export async function initializeClipNoteSettings(): Promise<void> {
 			modelStatus.textContent = `无法读取状态 · ${(error as Error).message}`;
 		}
 	};
-	document.getElementById('clip-note-model-download')!.addEventListener('click', async () => {
+	document.getElementById('transcript-generator-model-download')!.addEventListener('click', async () => {
 		modelStatus.textContent = '正在下载；可稍后刷新状态';
 		try { await downloadModel(model.value as WhisperModelSize); } catch (error) { modelStatus.textContent = `下载失败 · ${(error as Error).message}`; }
 	});
-	document.getElementById('clip-note-model-refresh')!.addEventListener('click', refreshModel);
-	document.getElementById('clip-note-model-delete')!.addEventListener('click', async () => {
+	document.getElementById('transcript-generator-model-refresh')!.addEventListener('click', refreshModel);
+	document.getElementById('transcript-generator-model-delete')!.addEventListener('click', async () => {
 		if (!confirm(`删除本机模型 ${model.value}？`)) return;
 		await deleteModel(model.value as WhisperModelSize);
 		await refreshModel();
 	});
 
-	for (const platform of ['bilibili', 'youtube'] as ClipNotePlatform[]) {
-		const mode = document.getElementById(`clip-note-${platform}-mode`) as HTMLSelectElement;
-		const input = document.getElementById(`clip-note-${platform}-manual`) as HTMLTextAreaElement;
-		const browserControls = document.getElementById(`clip-note-${platform}-browser-controls`) as HTMLElement;
-		const manualControls = document.getElementById(`clip-note-${platform}-manual-controls`) as HTMLElement;
+	for (const platform of ['bilibili', 'youtube'] as TranscriptGeneratorPlatform[]) {
+		const mode = document.getElementById(`transcript-generator-${platform}-mode`) as HTMLSelectElement;
+		const input = document.getElementById(`transcript-generator-${platform}-manual`) as HTMLTextAreaElement;
+		const browserControls = document.getElementById(`transcript-generator-${platform}-browser-controls`) as HTMLElement;
+		const manualControls = document.getElementById(`transcript-generator-${platform}-manual-controls`) as HTMLElement;
 		const refreshControls = () => {
 			browserControls.hidden = mode.value !== 'browser';
 			manualControls.hidden = mode.value !== 'manual';
@@ -150,8 +150,8 @@ export async function initializeClipNoteSettings(): Promise<void> {
 			await savePlatformCookies(platform, settings.cookies, next);
 			if (nextMode === 'manual') renderCookieSummary(platform, next, '请粘贴 Cookie Header 或 cookies.txt，然后点击“导入并验证”');
 		};
-		document.getElementById(`clip-note-${platform}-browser-read`)!.addEventListener('click', importBrowserCookies);
-		document.getElementById(`clip-note-${platform}-import`)!.addEventListener('click', async () => {
+		document.getElementById(`transcript-generator-${platform}-browser-read`)!.addEventListener('click', importBrowserCookies);
+		document.getElementById(`transcript-generator-${platform}-import`)!.addEventListener('click', async () => {
 			try {
 				const parsed = parseManualCookies(input.value, platform);
 				const next: PlatformCookieConfig = {
@@ -168,7 +168,7 @@ export async function initializeClipNoteSettings(): Promise<void> {
 				renderCookieSummary(platform, next, `导入失败：${(error as Error).message}`);
 			}
 		});
-		document.getElementById(`clip-note-${platform}-clear`)!.addEventListener('click', async () => {
+		document.getElementById(`transcript-generator-${platform}-clear`)!.addEventListener('click', async () => {
 			mode.value = 'off';
 			refreshControls();
 			const next: PlatformCookieConfig = { mode: 'off', cookies: [], updatedAt: Date.now(), lastValidatedAt: null, status: 'empty' };

@@ -15,12 +15,12 @@ from .schemas import TaskCreated, TaskStatus, TranscriptionRequest, WhisperModel
 from .service import TranscriptionService
 
 
-DATA_ROOT = Path.home() / ".cache" / "clip-note"
+DATA_ROOT = Path.home() / ".cache" / "transcript-generator"
 service = TranscriptionService(DATA_ROOT)
 model_downloads: dict[str, str] = {}
 model_downloads_lock = threading.Lock()
-auth_token = os.environ.get("CLIP_NOTE_TOKEN", "")
-idle_timeout_seconds = int(os.environ.get("CLIP_NOTE_IDLE_TIMEOUT", "900"))
+auth_token = os.environ.get("TRANSCRIPT_HELPER_TOKEN", "")
+idle_timeout_seconds = int(os.environ.get("TRANSCRIPT_HELPER_IDLE_TIMEOUT", "900"))
 last_activity = time.monotonic()
 activity_lock = threading.Lock()
 app = FastAPI(title="Transcript Helper", version=__version__)
@@ -64,7 +64,7 @@ def _idle_monitor() -> None:
 
 @app.on_event("startup")
 def start_idle_monitor() -> None:
-    threading.Thread(target=_idle_monitor, name="clip-note-idle", daemon=True).start()
+    threading.Thread(target=_idle_monitor, name="transcript-generator-idle", daemon=True).start()
 
 
 @app.get("/v1/health")

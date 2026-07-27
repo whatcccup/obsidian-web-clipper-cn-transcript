@@ -3,8 +3,8 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "clip-note-helper"
-version = "0.2.0"
+name = "transcript-helper"
+version = "0.2.1"
 description = "Local transcript generator for Obsidian Web Clipper CN"
 requires-python = ">=3.11,<3.13"
 dependencies = [
@@ -16,7 +16,7 @@ dependencies = [
 ]
 
 [project.scripts]
-clip-note-helper = "clip_note_helper.__main__:main"
+transcript-helper = "transcript_helper.__main__:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

@@ -1,6 +1,6 @@
 # Obsidian Web Clipper CN · Transcript
 
-![Transcript Generator 图标](extension/src/icons/clip-note.svg)
+![Transcript Generator 图标](extension/src/icons/transcript-generator.svg)
 
 > [!IMPORTANT]
 > 本项目仅支持 **macOS + Chrome/Chromium**。不支持 Windows 或 Linux，并且当前没有开发 Windows/Linux 版本的计划。
@@ -9,11 +9,11 @@
 
 Transcript Generator 不建立另一套笔记生成或保存流程。它只在 Bilibili / YouTube 视频没有平台字幕时，按需下载音轨并生成带时间戳的 transcript，然后把结果写回 Obsidian Web Clipper 原有的 `{{transcript}}` 变量。模板、Interpreter、属性和保存到 Obsidian 的流程仍由 Web Clipper 负责。
 
-> 当前产品版本：`v0.2.0` 源码版。代码基线为 [Obsidian Web Clipper CN 1.4.6](https://github.com/nextcaicai/obsidian-clipper-cn/releases/tag/1.4.6)。已完成 macOS + Chrome/Chromium 的一键安装、覆盖安装和真实视频流程验证。本项目不计划提供预编译独立程序，安装与升级统一通过源码脚本完成。
+> 当前产品版本：`v0.2.1` 源码版。代码基线为 [Obsidian Web Clipper CN 1.4.6](https://github.com/nextcaicai/obsidian-clipper-cn/releases/tag/1.4.6)。已完成 macOS + Chrome/Chromium 的一键安装、覆盖安装和真实视频流程验证。本项目不计划提供预编译独立程序，安装与升级统一通过源码脚本完成。
 
 ## 版本号如何定义
 
-- `v0.2.0` 是本项目自身的产品版本，同时写入浏览器扩展和 Transcript Helper。
+- `v0.2.1` 是本项目自身的产品版本，同时写入浏览器扩展和 Transcript Helper。
 - `1.4.6` 是 Obsidian Web Clipper CN 上游版本，只作为代码基线记录，不再混用为本项目版本。
 - Obsidian 官方 Web Clipper、Web Clipper CN 和本项目各自独立发布，因此版本号本来就不会自动保持一致。
 - 后续合并新的 CN 上游版本时，会更新“代码基线”；只有本项目发布功能或修复时，才更新产品版本。
@@ -117,7 +117,7 @@ obsidian-web-clipper-cn-transcript/
 ```text
 浏览器扩展
     ↓ Native Messaging
-clip-note-launcher
+transcript-launcher
     ↓ 按需启动
 Transcript Helper (127.0.0.1:8484)
 ```
@@ -164,7 +164,7 @@ bash install.sh
 如果检测到已经安装的 Transcript Helper，脚本会先询问是否覆盖。覆盖安装会更新 Helper、Launcher 和扩展构建产物，但不会删除：
 
 - 浏览器中的 Transcript Generator 设置、Cookies 和模板
-- `~/.cache/clip-note/` 中的 Whisper 模型
+- `~/.cache/transcript-generator/` 中的 Whisper 模型
 - transcript 缓存
 
 覆盖安装也需要先进入新版源码文件夹：
@@ -183,15 +183,15 @@ extension/dist/
 Helper 会安装到：
 
 ```text
-~/Library/Application Support/ClipNote/
+~/Library/Application Support/TranscriptGenerator/
 ```
 
-该目录名是 `v0.2.0` 已发布版本的本机兼容标识。项目和源码目录已改名，但安装目录、浏览器存储键和 Native Messaging Host 暂时保留旧标识，避免覆盖升级后丢失 Helper、Cookies、模型与设置。
+安装脚本会自动迁移 `v0.2.0` 使用的旧安装目录、模型缓存和 Native Messaging Host；扩展也会把旧浏览器存储键迁移到新的 `transcript_generator_*` 键。迁移不会删除 Cookies、模型、模板或任务设置。
 
 并注册 Native Messaging Host：
 
 ```text
-~/Library/Application Support/Google/Chrome/NativeMessagingHosts/cn.clipnote.launcher.json
+~/Library/Application Support/Google/Chrome/NativeMessagingHosts/cn.transcript.generator.launcher.json
 ```
 
 安装脚本明确不会创建：
@@ -257,8 +257,8 @@ Settings → Transcript Generator
 |---|---|---:|
 | Transcript Generator 开关与 ASR 选择 | `chrome.storage.local` | 否 |
 | Bilibili / YouTube Cookies | `chrome.storage.local` | 否 |
-| Whisper 模型 | `~/.cache/clip-note/models/` | 否 |
-| transcript 缓存 | `~/.cache/clip-note/transcripts/` | 否 |
+| Whisper 模型 | `~/.cache/transcript-generator/models/` | 否 |
+| transcript 缓存 | `~/.cache/transcript-generator/transcripts/` | 否 |
 | 临时音频与 cookiefile | 系统临时目录 | 任务结束后删除 |
 | Helper 会话令牌 | 本机运行时文件，权限 `0600` | Helper 停止后失效 |
 
@@ -290,7 +290,7 @@ npm run build:chrome
 ```bash
 cd helper
 uv sync --python 3.11
-uv run python -c "import clip_note_helper.api"
+uv run python -c "import transcript_helper.api"
 ```
 
 目前已实际验证：

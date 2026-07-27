@@ -20,7 +20,7 @@ class TranscriptionService:
         self.cache_root.mkdir(parents=True, exist_ok=True)
         self.tasks: dict[str, TaskStatus] = {}
         self.lock = threading.Lock()
-        self.executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="clip-note")
+        self.executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="transcript-generator")
 
     def create(self, request: TranscriptionRequest) -> TaskCreated:
         task_id = uuid.uuid4().hex
@@ -52,7 +52,7 @@ class TranscriptionService:
                 result = TranscriptResult.model_validate_json(cache_path.read_text())
                 self._update(task_id, status="completed", stage="字幕已生成", result=result)
                 return
-            with tempfile.TemporaryDirectory(prefix="clip-note-") as temp_dir:
+            with tempfile.TemporaryDirectory(prefix="transcript-generator-") as temp_dir:
                 root = Path(temp_dir)
                 cookiefile = None
                 if request.cookies:
