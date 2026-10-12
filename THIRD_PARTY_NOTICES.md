@@ -58,6 +58,15 @@ SOFTWARE.
 
 The Transcript Generator BCut client references the public endpoint sequence and result format documented and implemented by the upstream project. See the upstream repository for its complete copyright and license notice.
 
+## Whisper implementations
+
+- OpenAI Whisper: https://github.com/openai/whisper — MIT License.
+- Faster Whisper: https://github.com/SYSTRAN/faster-whisper — MIT License.
+- MLX Whisper: https://github.com/ml-explore/mlx-examples/tree/main/whisper — MIT License.
+- Converted MLX model weights are downloaded from the corresponding `mlx-community/whisper-*` model repositories on Hugging Face; see each model card for its provenance and license.
+
+These engines are installed as runtime dependencies. Model weights are downloaded on request and are not committed to this repository.
+
 ## Runtime dependencies
 
 The npm and Python dependencies declared in `extension/package.json` and `helper/pyproject.toml` are distributed under their respective licenses. Building a binary distribution may require collecting and shipping the corresponding dependency license texts separately.

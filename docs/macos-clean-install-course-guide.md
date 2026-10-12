@@ -1,3 +1,5 @@
+> 本文主要记录 v0.3.0 的安装流程。v0.4.0 新增 OpenAI Whisper 与 MLX Whisper：安装菜单先选引擎再选模型；三种引擎分别下载模型。v0.3.x 及更早 Release 不包含新增选项，完整步骤见根目录 README 的“从源码一键安装”和“本地模型目录与升级”。
+
 # Obsidian Web Clipper CN · Transcript：macOS 从零安装与完整验证
 
 > 适用系统：macOS + Chrome/Chromium

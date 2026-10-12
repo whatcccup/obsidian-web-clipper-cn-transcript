@@ -156,7 +156,9 @@ export async function updateTranscriptGeneratorPanel(
 	panel.hidden = false;
 	const videoKey = transcriptGeneratorVideoKey(url);
 	const existingJob = await loadActiveJob();
-	if (existingJob?.videoKey === videoKey && existingJob.status === 'completed' && existingJob.result) {
+	if (existingJob?.videoKey === videoKey && existingJob.status === 'completed' && existingJob.result
+		&& existingJob.provider === settings.asr.provider
+		&& (settings.asr.provider === 'bcut' || existingJob.whisperModel === settings.asr.whisperModel)) {
 		await onTranscript(formatTranscript(existingJob.result));
 		status.textContent = '字幕已生成，已恢复到当前模板的 transcript 变量。';
 		button.textContent = '字幕已生成';
@@ -188,9 +190,10 @@ export async function updateTranscriptGeneratorPanel(
 		status.textContent = '正在连接 Transcript Helper…';
 		try {
 			await getHealth();
-			if (settings.asr.provider === 'faster-whisper') {
+			if (settings.asr.provider !== 'bcut') {
 				status.textContent = `正在检查本地模型 ${settings.asr.whisperModel}…`;
-				const model = await getModelStatus(settings.asr.whisperModel);
+				const model = await getModelStatus(settings.asr.whisperModel, settings.asr.provider);
+				if (model.available === false) throw new Error(model.reason || '此转写器不可用');
 				if (model.status !== 'installed') throw new Error(`模型 ${settings.asr.whisperModel} 尚未安装，请先在设置中下载`);
 			}
 			status.textContent = '正在准备视频访问凭据…';
@@ -203,6 +206,7 @@ export async function updateTranscriptGeneratorPanel(
 				url,
 				videoKey,
 				provider: settings.asr.provider,
+				whisperModel: settings.asr.whisperModel,
 				status: 'queued',
 				stage: '等待处理',
 				startedAt: now,

@@ -5,6 +5,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 INSTALL_DIR="$HOME/Library/Application Support/ObsidianWebClipperCNTranscript"
 ASSUME_YES=false
 WHISPER_MODEL="skip"
+WHISPER_PROVIDER="faster-whisper"
 
 usage() {
   echo "Usage: bash install.sh [--yes]"
@@ -89,7 +90,30 @@ choose_whisper_model() {
   fi
 
   echo
-  echo "Choose a Faster Whisper model to download now:"
+  echo "Local engines: Faster Whisper, OpenAI Whisper (CPU), MLX Whisper (Apple Silicon GPU)."
+  echo "Each engine uses separate model files; existing models are preserved."
+  echo "Choose the engine for the model download:"
+  echo "  1) Faster Whisper (default)"
+  echo "  2) OpenAI Whisper"
+  if [ "$(uname -m)" = "arm64" ]; then echo "  3) MLX Whisper"; fi
+  echo "  4) Skip model download"
+  while true; do
+    printf "Select [default 1]: "
+    read -r engine_choice
+    case "$engine_choice" in
+      ""|1) WHISPER_PROVIDER="faster-whisper"; break ;;
+      2) WHISPER_PROVIDER="openai-whisper"; break ;;
+      3)
+        if [ "$(uname -m)" = "arm64" ]; then
+          WHISPER_PROVIDER="mlx-whisper"; break
+        fi
+        echo "MLX Whisper requires an Apple Silicon Mac running natively (arm64)."
+        ;;
+      4) return ;;
+      *) echo "Please choose an available engine." ;;
+    esac
+  done
+  echo "Choose a $WHISPER_PROVIDER model to download now:"
   echo "  1) tiny (recommended; extension default)"
   echo "  2) Skip (download later in the extension settings)"
   echo "  3) base"
@@ -126,8 +150,8 @@ echo "Installing the on-demand Transcript Helper..."
 bash "$SCRIPT_DIR/launcher/install-transcript.sh" --force
 
 if [ "$WHISPER_MODEL" != "skip" ]; then
-  echo "Downloading Faster Whisper model: $WHISPER_MODEL"
-  if "$INSTALL_DIR/helper/.venv/bin/python" - "$WHISPER_MODEL" <<'PY'
+  echo "Downloading $WHISPER_PROVIDER model: $WHISPER_MODEL"
+  if "$INSTALL_DIR/helper/.venv/bin/python" - "$WHISPER_MODEL" "$WHISPER_PROVIDER" <<'PY'
 from pathlib import Path
 import sys
 
@@ -135,11 +159,11 @@ from transcript_helper.models import WhisperModelManager
 
 model = sys.argv[1]
 manager = WhisperModelManager(Path.home() / ".cache" / "obsidian-web-clipper-cn-transcript" / "models")
-manager.download(model)
+manager.download(model, sys.argv[2])
 PY
   then
-    echo "Faster Whisper model installed: $WHISPER_MODEL"
-    echo "After loading the extension, select the same model in Settings > Transcript Generator."
+    echo "$WHISPER_PROVIDER model installed: $WHISPER_MODEL"
+    echo "After loading the extension, select $WHISPER_PROVIDER and $WHISPER_MODEL in Settings > Transcript Generator."
   else
     echo "Warning: model download failed. The extension and Helper are installed; retry from the extension settings." >&2
   fi

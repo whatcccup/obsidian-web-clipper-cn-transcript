@@ -47,7 +47,7 @@ rm -rf "$HELPER_DIR/src/transcript_helper"
 cp -R "$SOURCE_HELPER/src/transcript_helper" "$HELPER_DIR/src/transcript_helper"
 cp "$SCRIPT_DIR/transcript_launcher.py" "$LAUNCHER_DIR/transcript_launcher.py"
 
-(cd "$HELPER_DIR" && uv sync --python 3.11)
+(cd "$HELPER_DIR" && uv sync --python 3.11 --no-dev)
 
 NODE_BIN="$(command -v node || true)"
 NODE_DIR=""

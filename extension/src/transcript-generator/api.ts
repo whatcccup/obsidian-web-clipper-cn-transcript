@@ -1,4 +1,4 @@
-import { TranscriptGeneratorAsrSettings, TranscriptGeneratorJobStatus, HelperHealth, StoredCookie, TranscriptResult, WhisperModelSize } from './types';
+import { TranscriptGeneratorAsrSettings, TranscriptGeneratorJobStatus, HelperHealth, StoredCookie, TranscriptResult, WhisperModelSize, LocalTranscriptProvider } from './types';
 import { clearHelperSession, startHelper } from './native-client';
 
 function baseUrl(url: string): string {
@@ -69,14 +69,34 @@ export async function waitForTranscription(
 	}
 }
 
-export const getModelStatus = (model: WhisperModelSize) =>
-	request<{ status: 'installed' | 'not-installed' | 'downloading' | 'failed'; sizeBytes: number }>(`/v1/models/${model}/status`);
+interface ModelStatus {
+	status: 'installed' | 'not-installed' | 'downloading' | 'failed';
+	sizeBytes: number;
+	provider?: LocalTranscriptProvider;
+	available?: boolean;
+	reason?: string;
+}
+
+export async function getModelStatus(model: WhisperModelSize, provider: LocalTranscriptProvider = 'faster-whisper'): Promise<ModelStatus> {
+	const result = await request<ModelStatus>(`/v1/models/${model}/status?provider=${provider}`);
+	// Older Helpers ignore unknown query parameters: never mistake their Faster
+	// Whisper model for an OpenAI or MLX checkpoint.
+	if (provider !== 'faster-whisper' && result.provider !== provider) {
+		throw new Error('当前 Helper 不支持此转写器，请使用新版 install.sh 更新并重启 Helper');
+	}
+	return result;
+}
 
 export const getTranscribers = () =>
-	request<{ transcribers: Array<{ id: string; available: boolean; remote: boolean }> }>('/v1/transcribers');
+	request<{ transcribers: Array<{ id: string; available: boolean; remote: boolean; reason?: string }> }>('/v1/transcribers');
 
-export const downloadModel = (model: WhisperModelSize) =>
-	request(`/v1/models/${model}/download`, { method: 'POST' });
+export async function downloadModel(model: WhisperModelSize, provider: LocalTranscriptProvider = 'faster-whisper') {
+	const status = await getModelStatus(model, provider);
+	if (status.available === false) throw new Error(status.reason || '此转写器不可用');
+	return request(`/v1/models/${model}/download?provider=${provider}`, { method: 'POST' });
+}
 
-export const deleteModel = (model: WhisperModelSize) =>
-	request(`/v1/models/${model}`, { method: 'DELETE' });
+export async function deleteModel(model: WhisperModelSize, provider: LocalTranscriptProvider = 'faster-whisper') {
+	await getModelStatus(model, provider);
+	return request(`/v1/models/${model}?provider=${provider}`, { method: 'DELETE' });
+}

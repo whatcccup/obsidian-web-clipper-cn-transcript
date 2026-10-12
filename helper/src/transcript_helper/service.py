@@ -65,7 +65,7 @@ class TranscriptionService:
                 if request.provider == "bcut":
                     result = BcutClient().transcribe(audio)
                 else:
-                    result = self.model_manager.transcribe(audio, request.whisperModel)
+                    result = self.model_manager.transcribe(audio, request.whisperModel, request.provider)
                 cache_path.write_text(
                     json.dumps(result.model_dump(), ensure_ascii=False), encoding="utf-8"
                 )

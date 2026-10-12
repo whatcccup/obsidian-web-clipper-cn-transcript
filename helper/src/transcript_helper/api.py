@@ -1,4 +1,3 @@
-import importlib.util
 import os
 import signal
 import shutil
@@ -11,7 +10,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from . import __version__
 from .bcut import BcutClient
-from .schemas import TaskCreated, TaskStatus, TranscriptionRequest, WhisperModelSize
+from .schemas import TaskCreated, TaskStatus, TranscriptionRequest, WhisperModelSize, LocalProvider
+from .models import PROVIDER_LABELS, provider_unavailable_reason
 from .service import TranscriptionService
 
 
@@ -77,7 +77,9 @@ def health() -> dict:
             "bilibili": True,
             "youtube": True,
             "bcut": True,
-            "fasterWhisper": importlib.util.find_spec("faster_whisper") is not None,
+            "fasterWhisper": provider_unavailable_reason("faster-whisper") is None,
+            "openaiWhisper": provider_unavailable_reason("openai-whisper") is None,
+            "mlxWhisper": provider_unavailable_reason("mlx-whisper") is None,
             "node": shutil.which("node") is not None,
         },
     }
@@ -94,19 +96,23 @@ def transcribers() -> dict:
     return {
         "transcribers": [
             {"id": "bcut", "available": BcutClient().is_available(), "remote": True},
-            {
-                "id": "faster-whisper",
-                "available": importlib.util.find_spec("faster_whisper") is not None,
-                "remote": False,
-            },
+            *[
+                {"id": provider, "available": provider_unavailable_reason(provider) is None,
+                 "reason": provider_unavailable_reason(provider), "remote": False}
+                for provider in PROVIDER_LABELS
+            ],
         ]
     }
 
 
 @app.post("/v1/transcriptions", response_model=TaskCreated, status_code=202)
 def create_transcription(request: TranscriptionRequest) -> TaskCreated:
-    if request.provider == "faster-whisper" and not service.model_manager.is_installed(request.whisperModel):
-        raise HTTPException(status_code=409, detail=f"模型 {request.whisperModel} 尚未安装")
+    if request.provider != "bcut":
+        reason = provider_unavailable_reason(request.provider)
+        if reason:
+            raise HTTPException(status_code=409, detail=reason)
+        if not service.model_manager.is_installed(request.whisperModel, request.provider):
+            raise HTTPException(status_code=409, detail=f"{PROVIDER_LABELS[request.provider]} 模型 {request.whisperModel} 尚未安装")
     return service.create(request)
 
 
@@ -119,43 +125,51 @@ def get_transcription(task_id: str) -> TaskStatus:
 
 
 @app.post("/v1/models/{model}/download", status_code=202)
-def download_model(model: WhisperModelSize) -> dict:
-    if service.model_manager.is_installed(model):
-        return {"model": model, "status": "installed"}
+def download_model(model: WhisperModelSize, provider: LocalProvider = "faster-whisper") -> dict:
+    reason = provider_unavailable_reason(provider)
+    if reason:
+        raise HTTPException(status_code=409, detail=reason)
+    if service.model_manager.is_installed(model, provider):
+        return {"model": model, "provider": provider, "status": "installed"}
+    key = f"{provider}:{model}"
     with model_downloads_lock:
-        if model_downloads.get(model) == "downloading":
-            return {"model": model, "status": "downloading"}
-        model_downloads[model] = "downloading"
+        if model_downloads.get(key) == "downloading":
+            return {"model": model, "provider": provider, "status": "downloading"}
+        model_downloads[key] = "downloading"
 
     def run_download() -> None:
         try:
-            service.model_manager.download(model)
+            service.model_manager.download(model, provider)
             status = "installed"
         except Exception:
             status = "failed"
         with model_downloads_lock:
-            model_downloads[model] = status
+            model_downloads[key] = status
 
     service.executor.submit(run_download)
-    return {"model": model, "status": "downloading"}
+    return {"model": model, "provider": provider, "status": "downloading"}
 
 
 @app.get("/v1/models/{model}/status")
-def model_status(model: WhisperModelSize) -> dict:
-    path = service.model_manager.path_for(model)
+def model_status(model: WhisperModelSize, provider: LocalProvider = "faster-whisper") -> dict:
+    path = service.model_manager.path_for(model, provider)
     with model_downloads_lock:
-        active_status = model_downloads.get(model)
-    status = "installed" if service.model_manager.is_installed(model) else (active_status or "not-installed")
+        active_status = model_downloads.get(f"{provider}:{model}")
+    status = "installed" if service.model_manager.is_installed(model, provider) else (active_status or "not-installed")
+    reason = provider_unavailable_reason(provider)
     return {
-        "model": model,
+        "model": model, "provider": provider,
+        "available": reason is None, "reason": reason,
         "status": status,
         "sizeBytes": sum(item.stat().st_size for item in path.rglob("*") if item.is_file()) if path.exists() else 0,
     }
 
 
 @app.delete("/v1/models/{model}")
-def delete_model(model: WhisperModelSize) -> dict:
-    service.model_manager.delete(model)
+def delete_model(model: WhisperModelSize, provider: LocalProvider = "faster-whisper") -> dict:
     with model_downloads_lock:
-        model_downloads.pop(model, None)
-    return {"model": model, "status": "not-installed"}
+        if any(status == "downloading" for status in model_downloads.values()) or service.has_active_tasks():
+            raise HTTPException(status_code=409, detail="请等待下载和字幕任务完成后再删除模型")
+        service.model_manager.delete(model, provider)
+        model_downloads.pop(f"{provider}:{model}", None)
+    return {"model": model, "provider": provider, "status": "not-installed"}

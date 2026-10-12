@@ -6,7 +6,8 @@ from pydantic import BaseModel, Field, HttpUrl
 WhisperModelSize = Literal[
     "tiny", "base", "small", "medium", "large-v3", "large-v3-turbo"
 ]
-Provider = Literal["bcut", "faster-whisper"]
+LocalProvider = Literal["faster-whisper", "openai-whisper", "mlx-whisper"]
+Provider = Literal["bcut", "faster-whisper", "openai-whisper", "mlx-whisper"]
 
 
 class StoredCookie(BaseModel):
@@ -29,7 +30,7 @@ class TranscriptResult(BaseModel):
     language: str
     fullText: str
     segments: list[TranscriptSegment]
-    source: Literal["platform", "bcut", "faster-whisper"]
+    source: Literal["platform", "bcut", "faster-whisper", "openai-whisper", "mlx-whisper"]
 
 
 class TranscriptionRequest(BaseModel):

@@ -1,7 +1,7 @@
 import { deleteModel, downloadModel, getHealth, getModelStatus, getTranscribers } from '../transcript-generator/api';
 import { parseManualCookies, readBrowserCookies } from '../transcript-generator/cookies';
 import { loadTranscriptGeneratorSettings, saveAsrSettings, saveCookieSettings, saveGeneralSettings } from '../transcript-generator/storage';
-import { TranscriptGeneratorCookieSettings, TranscriptGeneratorPlatform, PlatformCookieConfig, WhisperModelSize } from '../transcript-generator/types';
+import { TranscriptGeneratorCookieSettings, TranscriptGeneratorPlatform, PlatformCookieConfig, WhisperModelSize, TranscriptGeneratorProvider, LocalTranscriptProvider, LOCAL_PROVIDER_LABELS } from '../transcript-generator/types';
 import { getHelperStatus, restartHelper, startHelper, stopHelper } from '../transcript-generator/native-client';
 
 const formatDate = (value: number | null) => value ? new Date(value).toLocaleString() : '从未';
@@ -31,6 +31,7 @@ export async function initializeTranscriptGeneratorSettings(): Promise<void> {
 	const enabled = document.getElementById('transcript-generator-enabled') as HTMLInputElement;
 	const provider = document.getElementById('transcript-generator-provider') as HTMLSelectElement;
 	const model = document.getElementById('transcript-generator-whisper-model') as HTMLSelectElement;
+	const modelStatus = document.getElementById('transcript-generator-model-status')!;
 	const localControls = document.getElementById('transcript-generator-model-controls') as HTMLElement;
 	const remoteNotice = document.getElementById('transcript-generator-bcut-notice') as HTMLElement;
 	enabled.checked = settings.general.enabled;
@@ -38,7 +39,7 @@ export async function initializeTranscriptGeneratorSettings(): Promise<void> {
 	model.value = settings.asr.whisperModel;
 
 	const refreshProviderVisibility = () => {
-		const local = provider.value === 'faster-whisper';
+		const local = provider.value !== 'bcut';
 		localControls.hidden = !local;
 		remoteNotice.hidden = local;
 	};
@@ -46,10 +47,14 @@ export async function initializeTranscriptGeneratorSettings(): Promise<void> {
 
 	enabled.onchange = () => saveGeneralSettings({ enabled: enabled.checked });
 	provider.onchange = async () => {
-		await saveAsrSettings({ provider: provider.value as 'bcut' | 'faster-whisper', whisperModel: model.value as WhisperModelSize });
+		await saveAsrSettings({ provider: provider.value as TranscriptGeneratorProvider, whisperModel: model.value as WhisperModelSize });
 		refreshProviderVisibility();
+		modelStatus.textContent = '点击刷新读取当前引擎的模型状态';
 	};
-	model.onchange = () => saveAsrSettings({ provider: provider.value as 'bcut' | 'faster-whisper', whisperModel: model.value as WhisperModelSize });
+	model.onchange = async () => {
+		await saveAsrSettings({ provider: provider.value as TranscriptGeneratorProvider, whisperModel: model.value as WhisperModelSize });
+		modelStatus.textContent = '点击刷新读取当前引擎的模型状态';
+	};
 
 	const connection = document.getElementById('transcript-generator-connection-status')!;
 	const renderRuntime = async () => {
@@ -84,25 +89,45 @@ export async function initializeTranscriptGeneratorSettings(): Promise<void> {
 		}
 	});
 
-	const modelStatus = document.getElementById('transcript-generator-model-status')!;
+	const selection = () => ({ model: model.value as WhisperModelSize, provider: provider.value as LocalTranscriptProvider });
+	const stillSelected = (selected: ReturnType<typeof selection>) => model.value === selected.model && provider.value === selected.provider;
 	const refreshModel = async () => {
+		if (provider.value === 'bcut') return;
+		const selected = selection();
 		try {
-			const result = await getModelStatus(model.value as WhisperModelSize);
+			const result = await getModelStatus(selected.model, selected.provider);
+			if (!stillSelected(selected)) return;
+			if (result.available === false) {
+				modelStatus.textContent = result.reason || '此转写器不可用';
+				return;
+			}
 			const labels = { 'not-installed': '未安装', downloading: '正在下载', failed: '下载失败，可重试' } as const;
-			modelStatus.textContent = result.status === 'installed' ? `已安装 · ${(result.sizeBytes / 1024 / 1024).toFixed(0)} MB` : labels[result.status];
+			const state = result.status === 'installed' ? `已安装 · ${(result.sizeBytes / 1024 / 1024).toFixed(0)} MB` : labels[result.status];
+			modelStatus.textContent = `${LOCAL_PROVIDER_LABELS[selected.provider]} · ${selected.model} · ${state}`;
 		} catch (error) {
-			modelStatus.textContent = `无法读取状态 · ${(error as Error).message}`;
+			if (stillSelected(selected)) modelStatus.textContent = `无法读取状态 · ${(error as Error).message}`;
 		}
 	};
 	document.getElementById('transcript-generator-model-download')!.addEventListener('click', async () => {
-		modelStatus.textContent = '正在下载；可稍后刷新状态';
-		try { await downloadModel(model.value as WhisperModelSize); } catch (error) { modelStatus.textContent = `下载失败 · ${(error as Error).message}`; }
+		const selected = selection();
+		modelStatus.textContent = `${LOCAL_PROVIDER_LABELS[selected.provider]} · ${selected.model} · 正在下载；可稍后刷新状态`;
+		try {
+			await downloadModel(selected.model, selected.provider);
+			if (stillSelected(selected)) await refreshModel();
+		} catch (error) {
+			if (stillSelected(selected)) modelStatus.textContent = `下载失败 · ${(error as Error).message}`;
+		}
 	});
 	document.getElementById('transcript-generator-model-refresh')!.addEventListener('click', refreshModel);
 	document.getElementById('transcript-generator-model-delete')!.addEventListener('click', async () => {
-		if (!confirm(`删除本机模型 ${model.value}？`)) return;
-		await deleteModel(model.value as WhisperModelSize);
-		await refreshModel();
+		const selected = selection();
+		if (!confirm(`删除本机 ${LOCAL_PROVIDER_LABELS[selected.provider]} 模型 ${selected.model}？其他引擎的模型会保留。`)) return;
+		try {
+			await deleteModel(selected.model, selected.provider);
+			if (stillSelected(selected)) await refreshModel();
+		} catch (error) {
+			if (stillSelected(selected)) modelStatus.textContent = `删除失败 · ${(error as Error).message}`;
+		}
 	});
 
 	for (const platform of ['bilibili', 'youtube'] as TranscriptGeneratorPlatform[]) {

@@ -11,11 +11,13 @@
 
 Transcript Generator 不建立另一套笔记生成或保存流程。它只在 Bilibili / YouTube 视频没有平台字幕时，按需下载音轨并生成带时间戳的 transcript，然后把结果写回 Obsidian Web Clipper 原有的 `{{transcript}}` 变量。模板、Interpreter、属性和保存到 Obsidian 的流程仍由 Web Clipper 负责。
 
-> 当前产品版本：`v0.3.0`。代码基线为 [Obsidian Web Clipper CN 1.4.6](https://github.com/nextcaicai/obsidian-clipper-cn/releases/tag/1.4.6)。已完成 macOS + Chrome/Chromium 的一键安装、覆盖安装和真实视频流程验证。Release 提供预构建 Chrome 扩展和 macOS 源码安装包，但不提供预编译独立程序。
+> 当前产品版本：`v0.4.0`。支持 Faster Whisper、OpenAI Whisper 原版和 MLX Whisper 三种本地识别引擎，另保留 BCut 在线识别。安装菜单可选择引擎和模型，设置页可分别下载与管理各引擎模型。
+
+> 代码基线为 [Obsidian Web Clipper CN 1.4.6](https://github.com/nextcaicai/obsidian-clipper-cn/releases/tag/1.4.6)。已完成 macOS + Chrome/Chromium 的一键安装、覆盖安装和真实视频流程验证。Release 提供预构建 Chrome 扩展和 macOS 源码安装包，但不提供预编译独立程序。
 
 ## 版本号如何定义
 
-- `v0.3.0` 是本项目自身的产品版本，同时写入浏览器扩展和 Transcript Helper。
+- `v0.4.0` 是本项目自身的产品版本，同时写入浏览器扩展和 Transcript Helper。
 - `1.4.6` 是 Obsidian Web Clipper CN 上游版本，只作为代码基线记录，不再混用为本项目版本。
 - Obsidian 官方 Web Clipper、Web Clipper CN 和本项目各自独立发布，因此版本号本来就不会自动保持一致。
 - 后续合并新的 CN 上游版本时，会更新“代码基线”；只有本项目发布功能或修复时，才更新产品版本。
@@ -30,7 +32,7 @@ BiliNote 提供了完整的视频笔记系统，但其数据库、GPT 总结、R
 
 - Bilibili / YouTube 音轨下载
 - BCut 在线 ASR
-- Faster Whisper 本地 ASR
+- Faster Whisper、OpenAI Whisper、MLX Whisper 本地 ASR
 - Whisper 模型管理
 - 临时 Cookies 转换
 - transcript 缓存和临时文件清理
@@ -46,7 +48,7 @@ flowchart LR
     E --> F[下载视频音轨]
     F --> G{用户选择的 ASR}
     G -->|BCut| H[上传音频至必剪识别]
-    G -->|Faster Whisper| I[完全本地识别]
+    G -->|本地 Whisper 引擎| I[完全本地识别]
     H --> J[生成带时间戳 transcript]
     I --> J
     J --> K[写回原有 transcript 变量]
@@ -58,7 +60,7 @@ flowchart LR
 - 原生字幕优先：有平台字幕时不启动 Helper。
 - 按需运行：不创建 LaunchAgent，不开机自启。
 - 自动退出：Helper 空闲 15 分钟后自动停止，任务执行期间不会退出。
-- 用户选择 ASR：BCut 与 Faster Whisper 不会未经用户确认互相回退。
+- 用户选择 ASR：BCut、Faster Whisper、OpenAI Whisper 与 MLX Whisper 不会自动互相回退。
 - 任务状态可恢复：提交任务后可以关闭弹窗，扩展图标显示 `ASR`；重新打开原视频的剪藏界面会恢复进度和结果。
 - 单一保存流程：生成结果只写回 `{{transcript}}`，不复制 Web Clipper 的模板和保存逻辑。
 - Cookies 本地隔离：Cookies 仅保存在 `chrome.storage.local`，任务结束后删除临时 cookiefile。
@@ -82,6 +84,14 @@ flowchart LR
   - 支持 `tiny`、`base`、`small`、`medium`、`large-v3`、`large-v3-turbo`
   - 新安装默认选择 `tiny`，优先降低首次下载和验证门槛
   - 模型未安装时阻止任务并引导用户下载
+- OpenAI Whisper 原版
+  - 使用官方 `openai-whisper` Python 实现，本项目固定使用 CPU / FP32
+  - 模型独立下载，不能直接使用 Faster Whisper 的模型文件
+- MLX Whisper
+  - 仅支持 Apple 芯片 Mac 和原生 arm64 Python，使用 Apple GPU
+  - 模型独立下载，支持与其他本地引擎相同的六档模型
+
+三种本地引擎均支持 `tiny`、`base`、`small`、`medium`、`large-v3`、`large-v3-turbo`，均保留时间戳。模型大小相同不代表推理速度和输出完全相同。OpenAI 原版和 MLX 通过现有 PyAV 解码音频，不需要另装系统 `ffmpeg`。
 
 ### Cookies
 
@@ -194,10 +204,11 @@ bash install.sh
 - 检查 Node.js 和 `uv`；从源码安装时还会检查 npm
 - 从源码安装时构建 Chrome 扩展；Release 安装包直接使用预构建扩展
 - 安装按需 Helper 与 Native Messaging Host
-- 提供 Faster Whisper 模型选择菜单，可立即下载任一支持模型，也可以跳过并稍后在扩展设置页下载
+- 准备 Faster Whisper 和 OpenAI Whisper 运行依赖；Apple 芯片 Mac 额外安装 MLX Whisper（Intel Mac 不安装 MLX）
+- 先选择模型所属引擎，再选择模型大小；也可以跳过，在扩展设置页下载。安装引擎依赖不等于下载了模型
 - 明确保证不创建 LaunchAgent
 
-交互安装会提供 `tiny`、`base`、`small`、`medium`、`large-v3`、`large-v3-turbo` 和“跳过”选项，直接按回车默认下载 `tiny`。选择模型后会在 Helper 安装完成后开始下载；加载扩展后，需要在 `Settings → Transcript Generator` 中选择同一个模型。下载失败不会撤销已经完成的扩展和 Helper 安装，可以稍后在设置页重试。使用 `--yes` 执行无交互覆盖安装时默认跳过模型下载，也不会删除已经存在的模型。
+交互安装首先提供 Faster Whisper、OpenAI Whisper、MLX Whisper（仅 Apple 芯片）和“跳过”；默认保留 Faster Whisper。然后提供 `tiny`、`base`、`small`、`medium`、`large-v3`、`large-v3-turbo` 和“跳过”选项，直接按回车默认下载 `tiny`。选择模型后会在 Helper 安装完成后开始下载；加载扩展后，需要在 `Settings → Transcript Generator` 中选择同一个转写器和模型。需要其他引擎的模型时，可在设置页切换转写器后分别下载。OpenAI 原版下载阶段还会加载校验模型，较大模型需要更多内存；首次建议用 `tiny` 验证。下载失败不会撤销已经完成的扩展和 Helper 安装，可以稍后在设置页重试。使用 `--yes` 执行无交互覆盖安装时默认跳过模型下载，也不会删除已经存在的模型。
 
 如果检测到已经安装的 Transcript Helper，脚本会先询问是否覆盖。覆盖安装会更新 Helper、Launcher 和扩展构建产物，但不会删除：
 
@@ -293,8 +304,8 @@ Settings → Transcript Generator
 然后：
 
 1. 启用字幕生成。
-2. 选择 BCut 或 Faster Whisper。
-3. 如果选择 Faster Whisper，先下载模型。
+2. 选择 BCut、Faster Whisper、OpenAI Whisper 或 MLX Whisper。
+3. 如果选择本地引擎，先下载该引擎的模型。Apple 芯片 Mac 可优先尝试 MLX Whisper；OpenAI 原版使用 CPU。切换后点击“刷新状态”，未安装依赖或平台不支持时会提示原因。
 4. 按需要配置 Bilibili / YouTube Cookies。
 
 ## 本地数据与隐私
@@ -317,7 +328,17 @@ Cookies 不进入：
 - transcript 缓存
 - 应用日志
 
-BCut 模式会把音频上传至必剪；Faster Whisper 模式不会上传音频。两种模式不会自动互相回退。
+BCut 模式会把音频上传至必剪；三种本地 Whisper 引擎均不会上传音频。引擎之间不会自动互相回退。
+
+### 本地模型目录与升级
+
+- Faster Whisper：`~/.cache/obsidian-web-clipper-cn-transcript/models/<模型>/`，保留原有目录。
+- OpenAI Whisper：`~/.cache/obsidian-web-clipper-cn-transcript/models/openai-whisper/<模型>/`。
+- MLX Whisper：`~/.cache/obsidian-web-clipper-cn-transcript/models/mlx-whisper/<模型>/`。
+
+删除模型只影响当前选择的引擎和模型。下载或识别进行中禁止删除。下载中断不算安装完成，可以重试。字幕缓存按视频、引擎、模型分别保存。
+
+已有用户需要用新版源码重新运行 `bash install.sh`，然后在 Chrome 重新加载扩展，并在设置页重启 Helper；仅重新加载扩展不能升级正在运行的旧 Helper。已有设置、Cookies、模型与字幕缓存保留。新引擎会增加 Python 依赖和磁盘占用；`--yes` 仍跳过模型下载。
 
 ## 构建与验证
 
@@ -329,6 +350,13 @@ BCut 模式会把音频上传至必剪；Faster Whisper 模式不会上传音频
 cd extension
 npm install
 npm run build:chrome
+node tests/transcript-providers.cjs
+```
+
+安装菜单回归（临时目录与模拟运行时，不执行真实安装）：
+
+```bash
+python3 -m unittest discover -s tests -v
 ```
 
 ### Helper
@@ -337,9 +365,20 @@ npm run build:chrome
 cd helper
 uv sync --python 3.11
 uv run python -c "import transcript_helper.api"
+uv sync --python 3.11 --group dev
+uv run --group dev python -m unittest discover -s tests -v
 ```
 
-目前已实际验证：
+v0.4.0 验证（2026-10-12，Apple M4 / 16 GB）：
+
+- Chrome 生产构建通过；保留 Webpack 包体积提醒。
+- 12 项后端测试、3 项隔离安装菜单测试通过；设置页 DOM、配置保存、API 引擎路由和旧 Helper 保护通过。
+- 弹窗与侧栏 UTF-8、控件 ID 一致性和乱码扫描通过。
+- OpenAI Whisper 与 MLX Whisper 均完成 `tiny` 模型下载，以及约 6 秒合成中文音频的真实转写，返回文本和时间戳；测试模型存放于独立临时目录。
+- 用户已反馈本机安装运行成功；此反馈不等于全部引擎、模型和平台的完整回归。
+- `tiny` 输出存在错字。本次为功能冒烟验证，不是识别质量或性能评测；尚未进行真实 Bilibili/YouTube 视频全链路回归、Intel Mac 实机验证或系统级覆盖安装。
+
+`v0.3.0` 历史验证记录（不代表新增引擎已完成真实视频回归）：
 
 - Bilibili 音轨下载
 - YouTube 音轨下载

@@ -272,7 +272,7 @@
 							<div class="setting-items">
 								<div class="setting-item mod-horizontal">
 									<div class="setting-item-info"><label for="transcript-generator-provider">转写器</label><div class="setting-item-description">失败时不会自动切换另一种转写器。</div></div>
-									<div class="setting-item-control"><select id="transcript-generator-provider"><option value="bcut">BCut 在线 ASR</option><option value="faster-whisper">Faster Whisper 本地 ASR</option></select></div>
+									<div class="setting-item-control"><select id="transcript-generator-provider"><option value="bcut">BCut 在线 ASR</option><option value="faster-whisper">Faster Whisper 本地 ASR</option><option value="openai-whisper">OpenAI Whisper 原版（CPU）</option><option value="mlx-whisper">MLX Whisper（Apple 芯片 GPU）</option></select></div>
 								</div>
 								<div id="transcript-generator-bcut-notice" class="warning-container" hidden>
 									<span>BCut 使用必剪的非官方公开接口，无需填写 API Key。音频会上传至必剪；接口可能随平台调整而失效，也不会自动回退到本地模型。</span>
@@ -284,7 +284,7 @@
 										<div class="setting-item-control"><select id="transcript-generator-whisper-model"><option selected>tiny</option><option>base</option><option>small</option><option>medium</option><option>large-v3</option><option>large-v3-turbo</option></select></div>
 									</div>
 									<div class="transcript-generator-actions"><button type="button" id="transcript-generator-model-download">下载 / 重试</button><button type="button" id="transcript-generator-model-refresh">刷新状态</button><button type="button" id="transcript-generator-model-delete" class="mod-warning">删除模型</button></div>
-									<div class="setting-item-description">音频和识别过程完全留在本机。模型未安装时不能开始字幕任务。</div>
+									<div class="setting-item-description">三种本地引擎分别下载模型，不能共用模型文件；音频和识别过程留在本机。OpenAI 原版使用 CPU，MLX 仅支持 Apple 芯片 Mac。切换引擎后请刷新状态；模型未安装时不能开始字幕任务。</div>
 								</div>
 							</div>
 						</div>

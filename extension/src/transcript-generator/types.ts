@@ -1,4 +1,10 @@
-export type TranscriptGeneratorProvider = 'bcut' | 'faster-whisper';
+export type LocalTranscriptProvider = 'faster-whisper' | 'openai-whisper' | 'mlx-whisper';
+export type TranscriptGeneratorProvider = 'bcut' | LocalTranscriptProvider;
+export const LOCAL_PROVIDER_LABELS: Record<LocalTranscriptProvider, string> = {
+	'faster-whisper': 'Faster Whisper',
+	'openai-whisper': 'OpenAI Whisper',
+	'mlx-whisper': 'MLX Whisper',
+};
 export type WhisperModelSize = 'tiny' | 'base' | 'small' | 'medium' | 'large-v3' | 'large-v3-turbo';
 export type CookieMode = 'off' | 'browser' | 'manual';
 export type CookieStatus = 'empty' | 'ready' | 'stale' | 'invalid';
@@ -46,7 +52,7 @@ export interface TranscriptResult {
 	language: string;
 	fullText: string;
 	segments: TranscriptSegment[];
-	source: 'platform' | 'bcut' | 'faster-whisper';
+	source: 'platform' | TranscriptGeneratorProvider;
 }
 
 export type TranscriptGeneratorJobStatus = 'queued' | 'downloading' | 'transcribing' | 'completed' | 'failed';
@@ -55,6 +61,7 @@ export interface TranscriptGeneratorJobState {
 	taskId: string;
 	url: string;
 	videoKey: string;
+	whisperModel?: WhisperModelSize;
 	provider: TranscriptGeneratorProvider;
 	status: TranscriptGeneratorJobStatus;
 	stage: string;
